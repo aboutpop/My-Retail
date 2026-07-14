@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>การจัดการสต๊อก - POS & Stock Retail Manager</title>
+    <link rel="stylesheet" href="css/fonts.css">
+    <link rel="stylesheet" href="assets/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-boxes-stacked fa-2x"></i>
+            <h2>POS & Stock Retail Manager</h2>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="has-branch">
+                <a href="index.html">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <ul class="branch-menu">
+                    <li><a href="#" id="btn-open-settings"><i class="fas fa-gear"></i><span>ตั้งค่าระบบ</span></a></li>
+                </ul>
+            </li>
+            <li><a href="pos.html"><i class="fas fa-cash-register"></i><span>POS (คิดบิลขาย)</span></a></li>
+            <li><a href="products.html"><i class="fas fa-box"></i><span>จัดการสินค้า</span></a></li>
+            <li><a href="categories.html"><i class="fas fa-tags"></i><span>จัดการหมวดหมู่</span></a></li>
+            <li><a href="sales.html"><i class="fas fa-receipt"></i><span>จัดการบิล</span></a></li>
+            <li><a href="stock.html" class="active"><i class="fas fa-warehouse"></i><span>การจัดการสต๊อก</span></a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-wrapper">
+        <!-- Topbar -->
+        <header class="topbar">
+            <h1><i class="fas fa-warehouse"></i> การจัดการสต๊อก</h1>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <span id="store-name" style="color: var(--text-muted); font-size: 0.9rem; font-weight: 500;"></span>
+                <span id="current-date" style="color: var(--text-muted); font-size: 0.9rem;"></span>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <main class="content-area">
+            <!-- Stats Cards (4 ใบ) -->
+            <div class="stats-grid-4">
+                <div class="card">
+                    <div class="stat-card">
+                        <div class="stat-icon primary">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-total-products">0</h3>
+                            <p>สินค้าทั้งหมด</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="stat-card">
+                        <div class="stat-icon warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-low-stock">0</h3>
+                            <p>สต็อกต่ำ (&lt;10)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="stat-card">
+                        <div class="stat-icon success">
+                            <i class="fas fa-truck-loading"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-today-import">0</h3>
+                            <p>รับเข้าวันนี้</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="stat-card">
+                        <div class="stat-icon info">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-last-update" style="font-size: 0.9rem;">-</h3>
+                            <p>ปรับสต็อกครั้งล่าสุด</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="card">
+                <div class="tab-group">
+                    <button class="tab-btn active stock-tab" data-tab="stock-in">
+                        <i class="fas fa-truck-loading"></i> รายการสินค้าเข้า
+                    </button>
+                    <button class="tab-btn stock-tab" data-tab="low-stock">
+                        <i class="fas fa-exclamation-triangle"></i> สินค้าสต็อกต่ำ
+                    </button>
+                    <button class="tab-btn stock-tab" data-tab="history">
+                        <i class="fas fa-history"></i> ประวัติการเปลี่ยนแปลง
+                    </button>
+                </div>
+
+                <!-- Tab 1: รายการสินค้าเข้า -->
+                <div id="tab-stock-in" class="stock-content">
+                    <div class="scan-section">
+                        <div class="scan-field" style="flex: 2;">
+                            <label><i class="fas fa-barcode"></i> สแกนบาร์โค้ดสินค้า</label>
+                            <input type="text" id="stock-in-barcode" placeholder="สแกนหรือพิมพ์บาร์โค้ด แล้วกด Enter"
+                                autocomplete="off">
+                        </div>
+                        <div class="scan-field">
+                            <label><i class="fas fa-search"></i> ค้นหาชื่อสินค้า</label>
+                            <input type="text" id="stock-in-search" placeholder="พิมพ์ชื่อสินค้า..." autocomplete="off">
+                            <div class="search-results" id="stock-in-search-results"></div>
+                        </div>
+                    </div>
+
+                    <div style="max-height: 500px; overflow-y: auto;">
+                        <table class="stock-in-table" id="stock-in-table">
+                            <thead>
+                                <tr>
+                                    <th>บาร์โค้ด</th>
+                                    <th>ชื่อสินค้า</th>
+                                    <th style="text-align: right;">ราคาขาย</th>
+                                    <th style="text-align: right;">ต้นทุน</th>
+                                    <th style="text-align: center;">จำนวนรับเข้า</th>
+                                    <th style="text-align: center;">สต็อกปัจจุบัน</th>
+                                    <th>หน่วย</th>
+                                    <th style="text-align: center;">📝</th>
+                                    <th style="text-align: center;">❌</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stock-in-tbody">
+                                <tr>
+                                    <td colspan="9" class="empty-list">
+                                        <i class="fas fa-inbox"></i>
+                                        <p>ยังไม่มีรายการสินค้าเข้า</p>
+                                        <small>สแกนบาร์โค้ดหรือค้นหาสินค้าเพื่อเพิ่มรายการ</small>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="stock-in-summary" id="stock-in-summary" style="display: none;">
+                        <div class="summary-info">
+                            <div class="summary-item">
+                                <span class="summary-label">จำนวนรายการ</span>
+                                <span class="summary-value" id="summary-count">0</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">รวมจำนวนหน่วย</span>
+                                <span class="summary-value" id="summary-qty">0</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">รวมมูลค่า (ต้นทุน)</span>
+                                <span class="summary-value" id="summary-cost">฿0.00</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-danger" id="btn-clear-stock-in">
+                                <i class="fas fa-trash"></i> ล้างรายการ
+                            </button>
+                            <button class="btn btn-success" id="btn-save-stock-in">
+                                <i class="fas fa-save"></i> บันทึกการรับเข้า
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: สินค้าสต็อกต่ำ -->
+                <div id="tab-low-stock" class="stock-content" style="display: none;">
+                    <div class="filter-bar">
+                        <input type="number" id="low-stock-threshold" value="10" min="0" placeholder="เกณฑ์สต็อกต่ำ">
+                        <button class="btn btn-primary" id="btn-low-stock-search">
+                            <i class="fas fa-search"></i> ค้นหา
+                        </button>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>บาร์โค้ด</th>
+                                    <th>ชื่อสินค้า</th>
+                                    <th>หมวดหมู่</th>
+                                    <th>สต็อก</th>
+                                    <th>สถานะ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="low-stock-table">
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">กำลังโหลดข้อมูล...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab 3: ประวัติการเปลี่ยนแปลง -->
+                <div id="tab-history" class="stock-content" style="display: none;">
+                    <div class="filter-bar">
+                        <input type="date" id="history-date-from" placeholder="จากวันที่">
+                        <input type="date" id="history-date-to" placeholder="ถึงวันที่">
+                        <select id="history-type-filter">
+                            <option value="">ทุกประเภท</option>
+                            <option value="sale">ขาย</option>
+                            <option value="adjustment">ปรับปรุง</option>
+                            <option value="import">นำเข้า</option>
+                            <option value="return">คืนสินค้า</option>
+                        </select>
+                        <input type="text" id="history-product-search" placeholder="ค้นหาสินค้า...">
+                        <button class="btn btn-primary" id="btn-history-search">
+                            <i class="fas fa-search"></i> ค้นหา
+                        </button>
+                        <button class="btn btn-outline" id="btn-history-clear">
+                            <i class="fas fa-times"></i> ล้าง
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>วันที่</th>
+                                    <th>สินค้า</th>
+                                    <th>ประเภท</th>
+                                    <th style="text-align: center;">สต๊อกเดิม</th>
+                                    <th style="text-align: center;">เปลี่ยนแปลง</th>
+                                    <th>เหตุผล</th>
+                                    <th>อ้างอิง</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table">
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">กำลังโหลดข้อมูล...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- 🆕 หมายเหตุท้ายตาราง -->
+                    <div id="history-note"
+                        style="display: none; margin-top: 1rem; padding: 0.8rem; background: var(--warning-light); border-radius: 6px; color: #92400e; font-size: 0.9rem;">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>หมายเหตุ:</strong> <span
+                            style="color: var(--danger); font-weight: bold;">*จำนวนสีแดง</span>
+                        คือจำนวนที่ปรับจากสต๊อกติดลบให้เป็น 0 (ในความเป็นจริง สต๊อกไม่สามารถติดลบได้)
+                    </div>
+                    <div class="pagination" id="history-pagination"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-gear"></i> ตั้งค่าระบบ</h3>
+                <button class="modal-close" id="btn-close-settings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tab-group">
+                    <button class="tab-btn active settings-tab" data-tab="main">
+                        <i class="fas fa-store"></i> ข้อมูลร้าน
+                    </button>
+                    <button class="tab-btn settings-tab" data-tab="other">
+                        <i class="fas fa-sliders-h"></i> ตั้งค่าอื่นๆ
+                    </button>
+                </div>
+
+                <div id="tab-main" class="settings-content">
+                    <form id="form-main-settings">
+                        <div class="form-group">
+                            <label class="form-label">ชื่อร้าน <span style="color: var(--danger);">*</span></label>
+                            <input type="text" class="form-control" id="setting-store-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ที่อยู่ร้าน</label>
+                            <textarea class="form-control" id="setting-store-address" rows="2"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ข้อความท้ายใบเสร็จ</label>
+                            <input type="text" class="form-control" id="setting-receipt-footer">
+                        </div>
+                    </form>
+                </div>
+
+                <div id="tab-other" class="settings-content" style="display: none;">
+                    <form id="form-other-settings">
+                        <div class="form-group">
+                            <label class="form-label">ข้อความต้อนรับ</label>
+                            <input type="text" class="form-control" id="setting-welcome-message">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">จำนวนปุ่ม Quick Items ต่อแถว</label>
+                            <select class="form-control" id="setting-quick-items-per-row">
+                                <option value="5">5 ปุ่ม/แถว</option>
+                                <option value="6" selected>6 ปุ่ม/แถว</option>
+                                <option value="7">7 ปุ่ม/แถว</option>
+                                <option value="8">8 ปุ่ม/แถว</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">จำนวนสินค้าขายดีที่แสดง</label>
+                            <input type="number" class="form-control" id="setting-quick-items-count" min="10" max="100"
+                                value="30">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ระยะเวลาที่ย้อนดู (วัน)</label>
+                            <input type="number" class="form-control" id="setting-quick-items-days" min="7" max="365"
+                                value="30">
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="btn-cancel-settings">ยกเลิก</button>
+                <button class="btn btn-primary" id="btn-save-settings">
+                    <i class="fas fa-save"></i> บันทึกการตั้งค่า
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: แสดงรายละเอียดสินค้า (ก่อนเพิ่มเข้ารายการ) -->
+    <div class="modal" id="product-detail-modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-box" style="color: var(--primary);"></i> รายละเอียดสินค้า</h3>
+                <button class="modal-close" id="btn-close-product-detail">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="background: var(--bg-main); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">
+                        <div>
+                            <small style="color: var(--text-muted);">บาร์โค้ด</small>
+                            <div id="detail-barcode" style="font-family: monospace; font-weight: bold;">-</div>
+                        </div>
+                        <div>
+                            <small style="color: var(--text-muted);">ชื่อสินค้า</small>
+                            <div id="detail-name" style="font-weight: bold;">-</div>
+                        </div>
+                        <div>
+                            <small style="color: var(--text-muted);">สต็อกปัจจุบัน</small>
+                            <div id="detail-stock" style="font-weight: bold; color: var(--primary);">-</div>
+                        </div>
+                        <div>
+                            <small style="color: var(--text-muted);">หน่วย</small>
+                            <div id="detail-unit" style="font-weight: bold;">-</div>
+                        </div>
+                        <div style="grid-column: 1/-1;">
+                            <small style="color: var(--text-muted);">หมวดหมู่</small>
+                            <div id="detail-category" style="font-weight: bold;">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🆕 ราคาขาย/ต้นทุน แก้ไขได้ -->
+                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label><i class="fas fa-tag"></i> ราคาขาย <span style="color: var(--danger);">*</span></label>
+                        <input type="number" id="detail-price" class="form-control" min="0" step="0.01"
+                            style="font-size: 1.1rem; font-weight: bold; color: var(--success);">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-coins"></i> ต้นทุน <span style="color: var(--danger);">*</span></label>
+                        <input type="number" id="detail-cost" class="form-control" min="0" step="0.01"
+                            style="font-size: 1.1rem; font-weight: bold; color: var(--danger);">
+                    </div>
+                </div>
+
+                <!-- 🆕 ปุ่มคิดราคายกลัง -->
+                <div style="margin: 1rem 0;">
+                    <button type="button" class="btn btn-outline" id="btn-toggle-wholesale" style="width: 100%;">
+                        <i class="fas fa-calculator"></i> คิดราคายกลัง (คำนวณต้นทุนจากราคาส่ง)
+                    </button>
+                </div>
+
+                <!-- 🆕 Section คำนวณต้นทุน (ซ่อนไว้ก่อน) -->
+                <div id="wholesale-calculator"
+                    style="display: none; background: var(--bg-main); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 2px dashed var(--primary);">
+                    <h4 style="margin-bottom: 1rem; color: var(--primary);">
+                        <i class="fas fa-calculator"></i> คำนวณต้นทุนจากราคาส่ง
+                    </h4>
+                    <div class="form-row"
+                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div class="form-group">
+                            <label><i class="fas fa-boxes"></i> จำนวนสินค้าในลัง</label>
+                            <input type="number" id="wholesale-quantity" class="form-control" min="1" step="1"
+                                placeholder="เช่น 12, 24, 30" style="text-align: center; font-weight: bold;">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-money-bill-wave"></i> ราคาส่ง (ทั้งลัง)</label>
+                            <input type="number" id="wholesale-price" class="form-control" min="0" step="0.01"
+                                placeholder="เช่น 300" style="text-align: center; font-weight: bold;">
+                        </div>
+                    </div>
+                    <div style="background: var(--bg-card); padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: var(--text-muted);">ต้นทุนต่อหน่วย:</span>
+                            <span id="wholesale-result"
+                                style="font-size: 1.5rem; font-weight: bold; color: var(--success);">฿0.00</span>
+                        </div>
+                        <small id="wholesale-formula"
+                            style="color: var(--text-muted); display: block; margin-top: 0.5rem;">
+                            สูตร: ราคาส่ง ÷ จำนวนในลัง = ต้นทุนต่อหน่วย
+                        </small>
+                    </div>
+                    <button type="button" class="btn btn-success" id="btn-apply-wholesale" style="width: 100%;">
+                        <i class="fas fa-check"></i> ใช้ค่านี้ (ใส่ในช่องต้นทุน + จำนวนรับเข้า)
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-plus-circle"></i> จำนวนรับเข้า <span
+                            style="color: var(--danger);">*</span></label>
+                    <input type="number" id="detail-quantity" class="form-control" min="1" step="1"
+                        placeholder="ระบุจำนวน" style="font-size: 1.2rem; font-weight: bold; text-align: center;">
+                    <small style="color: var(--text-muted);">ระบุจำนวนที่ต้องการรับเข้าสต็อก</small>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-comment"></i> หมายเหตุ (ถ้ามี)</label>
+                    <input type="text" id="detail-note" class="form-control"
+                        placeholder="เช่น รับจากsupplier, สินค้าใหม่">
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button class="btn btn-secondary" id="btn-cancel-product-detail">
+                    <i class="fas fa-times"></i> ยกเลิก
+                </button>
+                <button class="btn btn-primary" id="btn-add-to-list">
+                    <i class="fas fa-plus"></i> เพิ่มเข้ารายการ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: บาร์โค้ดไม่พบ -->
+    <div class="modal" id="barcode-not-found-modal" style="display: none;">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-question-circle" style="color: var(--warning);"></i> ไม่พบสินค้า</h3>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 1.1rem; margin-bottom: 1rem;">
+                    ไม่พบสินค้าที่มีบาร์โค้ด:
+                </p>
+                <div
+                    style="background: var(--bg-main); padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1rem;">
+                    <strong style="font-size: 1.5rem; color: var(--primary);" id="not-found-barcode">-</strong>
+                </div>
+                <p style="color: var(--text-muted);">
+                    ต้องการเพิ่มสินค้านี้เป็นสินค้าใหม่หรือไม่?
+                </p>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button class="btn btn-secondary" id="btn-cancel-new-product">
+                    <i class="fas fa-times"></i> ยังไม่เพิ่ม
+                </button>
+                <button class="btn btn-primary" id="btn-add-new-product">
+                    <i class="fas fa-plus"></i> เพิ่มสินค้าใหม่
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: เพิ่มสินค้าด่วน -->
+    <div class="modal" id="new-product-modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus-circle" style="color: var(--success);"></i> เพิ่มสินค้าด่วน</h3>
+                <button class="modal-close" id="btn-close-new-product">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="new-product-form">
+                    <div class="form-group">
+                        <label><i class="fas fa-barcode"></i> บาร์โค้ด <span
+                                style="color: var(--danger);">*</span></label>
+                        <input type="text" id="new-product-barcode" class="form-control" required readonly
+                            style="background: var(--bg-main); font-size: 1.1rem; font-weight: bold;">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-box"></i> ชื่อสินค้า <span
+                                style="color: var(--danger);">*</span></label>
+                        <input type="text" id="new-product-name" class="form-control" required
+                            placeholder="กรอกชื่อสินค้า...">
+                    </div>
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label><i class="fas fa-tag"></i> ราคาขาย <span
+                                    style="color: var(--danger);">*</span></label>
+                            <input type="number" id="new-product-price" class="form-control" required min="0"
+                                step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-coins"></i> ต้นทุน</label>
+                            <input type="number" id="new-product-cost" class="form-control" min="0" step="0.01"
+                                placeholder="0.00" value="0">
+                        </div>
+                    </div>
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label><i class="fas fa-cubes"></i> สต็อกเริ่มต้น</label>
+                            <input type="number" id="new-product-stock" class="form-control" min="0" step="1"
+                                placeholder="0" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-folder"></i> หมวดหมู่</label>
+                            <select id="new-product-category" class="form-control">
+                                <option value="">-- เลือกหมวดหมู่ --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-ruler"></i> หน่วย</label>
+                        <input type="text" id="new-product-unit" class="form-control"
+                            placeholder="เช่น ชิ้น, กล่อง, ถุง" value="ชิ้น">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button class="btn btn-secondary" id="btn-cancel-save-product">
+                    <i class="fas fa-times"></i> ยกเลิก
+                </button>
+                <button class="btn btn-success" id="btn-save-new-product">
+                    <i class="fas fa-save"></i> บันทึกสินค้า
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+
+        // Thai to Number Mapping
+        const THAI_TO_NUMBER = {
+            'ๅ': '1', '/': '2', '-': '3', 'ภ': '4', 'ถ': '5',
+            'ุ': '6',
+            'ึ': '7',
+            'ค': '8', 'ต': '9', 'จ': '0'
+        };
+
+        function convertThaiToNumber(text) {
+            const normalized = text.normalize('NFD');
+            let result = '';
+            for (let char of normalized) {
+                if (/[0-9]/.test(char)) result += char;
+                else if (THAI_TO_NUMBER[char]) result += THAI_TO_NUMBER[char];
+            }
+            return result;
+        }
+
+        // State
+        let allProducts = [];
+        let categories = [];
+        let stockInList = [];
+        let currentProduct = null;
+        let pendingBarcode = null;
+        let stockLogs = [];
+        let currentOffset = 0;
+        const limit = 20;
+        let searchTimeout = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            setCurrentDate();
+            await Promise.all([
+                loadStoreName(),
+                loadAllProducts(),
+                loadStats()
+            ]);
+            await loadLowStock();
+            await loadHistory();
+            setupEventListeners();
+
+            focusScanInput();
+
+            console.log('✅ Stock Management initialized');
+        });
+
+        function setCurrentDate() {
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            document.getElementById('current-date').textContent = now.toLocaleDateString('th-TH', options);
+        }
+
+        async function loadStoreName() {
+            try {
+                const res = await fetch(`${API_BASE}/settings.php?key=store_name`);
+                const data = await res.json();
+                if (data.success && data.data && data.data.settings) {
+                    const storeName = data.data.settings.store_name || 'ร้านค้า';
+                    document.getElementById('store-name').textContent = storeName;
+                    document.title = `การจัดการสต๊อก - ${storeName}`;
+                }
+            } catch (error) {
+                console.error('Error loading store name:', error);
+            }
+        }
+
+        async function loadAllProducts() {
+            try {
+                const [productsRes, categoriesRes] = await Promise.all([
+                    fetch(`${API_BASE}/products.php?limit=9999`),
+                    fetch(`${API_BASE}/categories.php`)
+                ]);
+
+                const productsData = await productsRes.json();
+                const categoriesData = await categoriesRes.json();
+
+                if (productsData.success && productsData.data && productsData.data.products) {
+                    allProducts = productsData.data.products;
+                }
+
+                if (categoriesData.success && categoriesData.data && categoriesData.data.categories) {
+                    categories = categoriesData.data.categories;
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const productsRes = await fetch(`${API_BASE}/products.php?limit=10000`);
+                const productsData = await productsRes.json();
+
+                if (productsData.success && productsData.data && productsData.data.products) {
+                    const products = productsData.data.products;
+                    const totalProducts = products.length;
+                    const lowStock = products.filter(p => parseInt(p.stock || 0) < 10 && parseInt(p.stock || 0) >= 0).length;
+
+                    document.getElementById('stat-total-products').textContent = totalProducts.toLocaleString();
+                    document.getElementById('stat-low-stock').textContent = lowStock.toLocaleString();
+                }
+
+                const today = new Date().toISOString().split('T')[0];
+                const logsRes = await fetch(`${API_BASE}/stock.php?date_from=${today}&date_to=${today}&change_type=import&limit=10000`);
+                const logsData = await logsRes.json();
+
+                if (logsData.success && logsData.data) {
+                    const todayLogs = logsData.data.logs || [];
+                    const totalImport = todayLogs.reduce((sum, log) => {
+                        return sum + (log.quantity_change > 0 ? log.quantity_change : 0);
+                    }, 0);
+                    document.getElementById('stat-today-import').textContent = totalImport.toLocaleString();
+                }
+
+                const lastRes = await fetch(`${API_BASE}/stock.php?limit=1`);
+                const lastData = await lastRes.json();
+                if (lastData.success && lastData.data && lastData.data.logs && lastData.data.logs.length > 0) {
+                    const lastLog = lastData.data.logs[0];
+                    const lastDate = new Date(lastLog.created_at);
+                    const timeAgo = getTimeAgo(lastDate);
+                    document.getElementById('stat-last-update').textContent = timeAgo;
+                } else {
+                    document.getElementById('stat-last-update').textContent = '-';
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'เมื่อสักครู่';
+            if (diffMins < 60) return `${diffMins} นาทีที่แล้ว`;
+            if (diffHours < 24) return `${diffHours} ชั่วโมงที่แล้ว`;
+            if (diffDays < 7) return `${diffDays} วันที่แล้ว`;
+            return date.toLocaleDateString('th-TH', { day: '2-digit', month: 'short' });
+        }
+
+        function focusScanInput() {
+            setTimeout(() => {
+                document.getElementById('stock-in-barcode').focus();
+            }, 100);
+        }
+
+        // ============================================================
+        // Tab 1: รายการสินค้าเข้า
+        // ============================================================
+
+        function scanStockInBarcode(barcode) {
+            if (!barcode) return;
+
+            const product = allProducts.find(p => p.barcode === barcode);
+
+            if (product) {
+                showProductDetailModal(product);
+                document.getElementById('stock-in-barcode').value = '';
+            } else {
+                document.getElementById('stock-in-barcode').value = '';
+                showBarcodeNotFoundModal(barcode);
+            }
+        }
+
+        function showProductDetailModal(product) {
+            currentProduct = product;
+
+            document.getElementById('detail-barcode').textContent = product.barcode || '-';
+            document.getElementById('detail-name').textContent = product.name;
+            document.getElementById('detail-stock').textContent = `${product.stock} ${product.unit || 'ชิ้น'}`;
+            document.getElementById('detail-unit').textContent = product.unit || 'ชิ้น';
+
+            // 🆕 ราคาขาย/ต้นทุน แก้ไขได้
+            document.getElementById('detail-price').value = parseFloat(product.price).toFixed(2);
+            document.getElementById('detail-cost').value = parseFloat(product.cost).toFixed(2);
+
+            const categoryName = categories.find(c => c.id == product.category_id)?.name || '-';
+            document.getElementById('detail-category').textContent = categoryName;
+
+            document.getElementById('detail-quantity').value = '';
+            document.getElementById('detail-note').value = '';
+
+            // 🆕 ซ่อน wholesale calculator
+            document.getElementById('wholesale-calculator').style.display = 'none';
+            document.getElementById('wholesale-quantity').value = '';
+            document.getElementById('wholesale-price').value = '';
+            document.getElementById('wholesale-result').textContent = '฿0.00';
+
+            // คืนค่าปุ่มเป็น "เพิ่มเข้ารายการ"
+            const btnAdd = document.getElementById('btn-add-to-list');
+            btnAdd.innerHTML = '<i class="fas fa-plus"></i> เพิ่มเข้ารายการ';
+            btnAdd.onclick = addToStockInList;
+
+            document.getElementById('product-detail-modal').style.display = 'flex';
+
+            setTimeout(() => {
+                document.getElementById('detail-quantity').focus();
+            }, 100);
+        }
+
+        function addToStockInList() {
+            const quantity = parseInt(document.getElementById('detail-quantity').value);
+            const note = document.getElementById('detail-note').value.trim();
+            const price = parseFloat(document.getElementById('detail-price').value) || 0;
+            const cost = parseFloat(document.getElementById('detail-cost').value) || 0;
+
+            if (!quantity || quantity <= 0) {
+                alert('กรุณาระบุจำนวนมากกว่า 0');
+                document.getElementById('detail-quantity').focus();
+                return;
+            }
+
+            if (price <= 0) {
+                alert('กรุณากรอกราคาขายมากกว่า 0');
+                document.getElementById('detail-price').focus();
+                return;
+            }
+
+            const existingIndex = stockInList.findIndex(item => item.product_id === currentProduct.id);
+
+            if (existingIndex >= 0) {
+                stockInList[existingIndex].quantity += quantity;
+                stockInList[existingIndex].price = price;
+                stockInList[existingIndex].cost = cost;
+                if (note) {
+                    stockInList[existingIndex].note = note;
+                }
+            } else {
+                stockInList.push({
+                    product_id: currentProduct.id,
+                    barcode: currentProduct.barcode,
+                    name: currentProduct.name,
+                    price: price,
+                    cost: cost,
+                    current_stock: parseInt(currentProduct.stock),
+                    unit: currentProduct.unit || 'ชิ้น',
+                    quantity: quantity,
+                    note: note
+                });
+            }
+
+            document.getElementById('product-detail-modal').style.display = 'none';
+            currentProduct = null;
+
+            renderStockInList();
+            focusScanInput();
+        }
+
+        function renderStockInList() {
+            const tbody = document.getElementById('stock-in-tbody');
+            const summary = document.getElementById('stock-in-summary');
+
+            if (stockInList.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="empty-list">
+                            <i class="fas fa-inbox"></i>
+                            <p>ยังไม่มีรายการสินค้าเข้า</p>
+                            <small>สแกนบาร์โค้ดหรือค้นหาสินค้าเพื่อเพิ่มรายการ</small>
+                        </td>
+                    </tr>
+                `;
+                summary.style.display = 'none';
+                return;
+            }
+
+            tbody.innerHTML = stockInList.map((item, index) => `
+                <tr>
+                    <td class="barcode-cell"><code>${item.barcode || '-'}</code></td>
+                    <td><strong>${item.name}</strong></td>
+                    <td style="text-align: right;">฿${item.price.toFixed(2)}</td>
+                    <td style="text-align: right;">฿${item.cost.toFixed(2)}</td>
+                    <td style="text-align: center; font-weight: bold; color: var(--success);">+${item.quantity}</td>
+                    <td style="text-align: center;">${item.current_stock}</td>
+                    <td>${item.unit}</td>
+                    <td style="text-align: center;">
+                        <button class="action-btn edit" onclick="editStockInItem(${index})" title="แก้ไข">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                    <td style="text-align: center;">
+                        <button class="action-btn delete" onclick="removeStockInItem(${index})" title="ลบ">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            const totalQty = stockInList.reduce((sum, item) => sum + item.quantity, 0);
+            const totalCost = stockInList.reduce((sum, item) => sum + (item.cost * item.quantity), 0);
+
+            document.getElementById('summary-count').textContent = stockInList.length;
+            document.getElementById('summary-qty').textContent = totalQty;
+            document.getElementById('summary-cost').textContent = `฿${totalCost.toFixed(2)}`;
+
+            summary.style.display = 'flex';
+        }
+
+        function editStockInItem(index) {
+            const item = stockInList[index];
+
+            currentProduct = {
+                id: item.product_id,
+                barcode: item.barcode,
+                name: item.name,
+                price: item.price,
+                cost: item.cost,
+                stock: item.current_stock,
+                unit: item.unit,
+                category_id: item.category_id
+            };
+
+            document.getElementById('detail-barcode').textContent = item.barcode || '-';
+            document.getElementById('detail-name').textContent = item.name;
+            document.getElementById('detail-stock').textContent = `${item.current_stock} ${item.unit}`;
+            document.getElementById('detail-unit').textContent = item.unit;
+            document.getElementById('detail-price').value = item.price.toFixed(2);
+            document.getElementById('detail-cost').value = item.cost.toFixed(2);
+
+            const categoryName = categories.find(c => c.id == currentProduct.category_id)?.name || '-';
+            document.getElementById('detail-category').textContent = categoryName;
+
+            document.getElementById('detail-quantity').value = item.quantity;
+            document.getElementById('detail-note').value = item.note || '';
+
+            // ซ่อน wholesale calculator
+            document.getElementById('wholesale-calculator').style.display = 'none';
+
+            const btnAdd = document.getElementById('btn-add-to-list');
+            btnAdd.innerHTML = '<i class="fas fa-save"></i> อัปเดตรายการ';
+            btnAdd.onclick = () => updateStockInItem(index);
+
+            document.getElementById('product-detail-modal').style.display = 'flex';
+
+            setTimeout(() => {
+                document.getElementById('detail-quantity').focus();
+            }, 100);
+        }
+
+        function updateStockInItem(index) {
+            const quantity = parseInt(document.getElementById('detail-quantity').value);
+            const note = document.getElementById('detail-note').value.trim();
+            const price = parseFloat(document.getElementById('detail-price').value) || 0;
+            const cost = parseFloat(document.getElementById('detail-cost').value) || 0;
+
+            if (!quantity || quantity <= 0) {
+                alert('กรุณาระบุจำนวนมากกว่า 0');
+                document.getElementById('detail-quantity').focus();
+                return;
+            }
+
+            stockInList[index].quantity = quantity;
+            stockInList[index].price = price;
+            stockInList[index].cost = cost;
+            stockInList[index].note = note;
+
+            document.getElementById('product-detail-modal').style.display = 'none';
+            currentProduct = null;
+
+            const btnAdd = document.getElementById('btn-add-to-list');
+            btnAdd.innerHTML = '<i class="fas fa-plus"></i> เพิ่มเข้ารายการ';
+            btnAdd.onclick = addToStockInList;
+
+            renderStockInList();
+            focusScanInput();
+        }
+
+        function removeStockInItem(index) {
+            if (confirm(`ต้องการลบ "${stockInList[index].name}" ออกจากรายการหรือไม่?`)) {
+                stockInList.splice(index, 1);
+                renderStockInList();
+                focusScanInput();
+            }
+        }
+
+        function clearStockInList() {
+            if (stockInList.length === 0) {
+                focusScanInput();
+                return;
+            }
+
+            if (confirm('ต้องการล้างรายการสินค้าเข้าทั้งหมดหรือไม่?')) {
+                stockInList = [];
+                renderStockInList();
+                focusScanInput();
+            }
+        }
+
+        async function saveStockInBatch() {
+            if (stockInList.length === 0) {
+                alert('ไม่มีรายการสินค้าเข้า');
+                return;
+            }
+
+            const confirmSave = confirm(`ต้องการบันทึกการรับเข้า ${stockInList.length} รายการหรือไม่?`);
+            if (!confirmSave) return;
+
+            try {
+                let successCount = 0;
+                let failCount = 0;
+
+                for (const item of stockInList) {
+                    try {
+                        let actualQuantityChange = item.quantity;
+
+                        if (item.current_stock < 0) {
+                            actualQuantityChange = item.quantity + Math.abs(item.current_stock);
+                        }
+
+                        const res = await fetch(`${API_BASE}/stock.php`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                product_id: item.product_id,
+                                change_type: 'import',
+                                quantity_change: actualQuantityChange,
+                                reason: item.note || 'รับสินค้าเข้า'
+                            })
+                        });
+
+                        const data = await res.json();
+                        if (data.success) {
+                            successCount++;
+
+                            // 🆕 อัพเดทราคาขาย/ต้นทุนใน products table
+                            await fetch(`${API_BASE}/products.php`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    id: item.product_id,
+                                    price: item.price,
+                                    cost: item.cost
+                                })
+                            });
+                        } else {
+                            failCount++;
+                            console.error(`Failed to save ${item.name}:`, data.message);
+                        }
+                    } catch (error) {
+                        failCount++;
+                        console.error(`Error saving ${item.name}:`, error);
+                    }
+                }
+
+                if (successCount > 0) {
+                    alert(`✅ บันทึกสำเร็จ ${successCount} รายการ${failCount > 0 ? `\n❌ ล้มเหลว ${failCount} รายการ` : ''}`);
+
+                    stockInList = [];
+                    renderStockInList();
+
+                    await Promise.all([
+                        loadAllProducts(),
+                        loadStats(),
+                        loadLowStock(),
+                        loadHistory()
+                    ]);
+                } else {
+                    alert(`❌ ไม่สามารถบันทึกได้ (${failCount} รายการล้มเหลว)`);
+                }
+
+                focusScanInput();
+
+            } catch (error) {
+                console.error('Error saving batch:', error);
+                alert('เกิดข้อผิดพลาดในการบันทึก');
+            }
+        }
+
+        // ============================================================
+        // 🆕 Wholesale Calculator
+        // ============================================================
+
+        function toggleWholesaleCalculator() {
+            const calculator = document.getElementById('wholesale-calculator');
+            const isVisible = calculator.style.display !== 'none';
+
+            if (isVisible) {
+                calculator.style.display = 'none';
+            } else {
+                calculator.style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('wholesale-quantity').focus();
+                }, 100);
+            }
+        }
+
+        function calculateWholesale() {
+            const quantity = parseInt(document.getElementById('wholesale-quantity').value) || 0;
+            const price = parseFloat(document.getElementById('wholesale-price').value) || 0;
+
+            if (quantity <= 0 || price <= 0) {
+                document.getElementById('wholesale-result').textContent = '฿0.00';
+                document.getElementById('wholesale-formula').textContent = 'กรุณากรอกจำนวนและราคาให้ครบ';
+                return;
+            }
+
+            const costPerUnit = price / quantity;
+            document.getElementById('wholesale-result').textContent = `฿${costPerUnit.toFixed(2)}`;
+            document.getElementById('wholesale-formula').textContent =
+                `สูตร: ฿${price.toFixed(2)} ÷ ${quantity} = ฿${costPerUnit.toFixed(2)}/หน่วย`;
+        }
+
+        function applyWholesale() {
+            const quantity = parseInt(document.getElementById('wholesale-quantity').value) || 0;
+            const price = parseFloat(document.getElementById('wholesale-price').value) || 0;
+
+            if (quantity <= 0 || price <= 0) {
+                alert('กรุณากรอกจำนวนและราคาให้ครบ');
+                return;
+            }
+
+            const costPerUnit = price / quantity;
+
+            // ใส่ค่าในช่องต้นทุน
+            document.getElementById('detail-cost').value = costPerUnit.toFixed(2);
+
+            // ใส่ค่าในช่องจำนวนรับเข้า
+            document.getElementById('detail-quantity').value = quantity;
+
+            // ซ่อน calculator
+            document.getElementById('wholesale-calculator').style.display = 'none';
+
+            // Focus ที่ช่องจำนวน
+            document.getElementById('detail-quantity').focus();
+        }
+
+        // ============================================================
+        // Modal: บาร์โค้ดไม่พบ + เพิ่มสินค้าด่วน
+        // ============================================================
+
+        function showBarcodeNotFoundModal(barcode) {
+            pendingBarcode = barcode;
+            document.getElementById('not-found-barcode').textContent = barcode;
+            document.getElementById('barcode-not-found-modal').style.display = 'flex';
+            setTimeout(() => {
+                document.getElementById('btn-add-new-product').focus();
+            }, 100);
+        }
+
+        function hideBarcodeNotFoundModal() {
+            document.getElementById('barcode-not-found-modal').style.display = 'none';
+            pendingBarcode = null;
+        }
+
+        function showNewProductModal(barcode) {
+            hideBarcodeNotFoundModal();
+
+            document.getElementById('new-product-barcode').value = barcode;
+            document.getElementById('new-product-name').value = '';
+            document.getElementById('new-product-price').value = '';
+            document.getElementById('new-product-cost').value = '0';
+            document.getElementById('new-product-stock').value = '0';
+            document.getElementById('new-product-unit').value = 'ชิ้น';
+
+            const categorySelect = document.getElementById('new-product-category');
+            categorySelect.innerHTML = '<option value="">-- เลือกหมวดหมู่ --</option>';
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.name;
+                categorySelect.appendChild(option);
+            });
+
+            document.getElementById('new-product-modal').style.display = 'flex';
+            setTimeout(() => {
+                document.getElementById('new-product-name').focus();
+            }, 100);
+        }
+
+        function hideNewProductModal() {
+            document.getElementById('new-product-modal').style.display = 'none';
+        }
+
+        async function saveNewProduct() {
+            const barcode = document.getElementById('new-product-barcode').value.trim();
+            const name = document.getElementById('new-product-name').value.trim();
+            const price = parseFloat(document.getElementById('new-product-price').value) || 0;
+            const cost = parseFloat(document.getElementById('new-product-cost').value) || 0;
+            const stock = parseInt(document.getElementById('new-product-stock').value) || 0;
+            const categoryId = document.getElementById('new-product-category').value;
+            const unit = document.getElementById('new-product-unit').value.trim() || 'ชิ้น';
+
+            if (!barcode || !name) {
+                alert('กรุณากรอกบาร์โค้ดและชื่อสินค้า');
+                return;
+            }
+            if (price <= 0) {
+                alert('กรุณากรอกราคาขายมากกว่า 0');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/products.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name, barcode, barcode_status: 1,
+                        price, cost, stock, unit,
+                        category_id: categoryId ? parseInt(categoryId) : null,
+                        category: ''
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    const newProduct = data.data;
+                    allProducts.push({
+                        id: newProduct.id,
+                        name: newProduct.name,
+                        barcode: newProduct.barcode,
+                        price: parseFloat(newProduct.price),
+                        cost: parseFloat(newProduct.cost),
+                        stock: parseInt(newProduct.stock),
+                        unit: newProduct.unit,
+                        category_id: newProduct.category_id,
+                        barcode_status: parseInt(newProduct.barcode_status)
+                    });
+
+                    hideNewProductModal();
+                    alert(`✅ เพิ่มสินค้า "${name}" สำเร็จ`);
+
+                    showProductDetailModal(allProducts[allProducts.length - 1]);
+                } else {
+                    alert('❌ ไม่สามารถเพิ่มสินค้าได้: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error saving new product:', error);
+                alert('เกิดข้อผิดพลาดในการบันทึกสินค้า');
+            }
+        }
+
+        // ============================================================
+        // Tab 2: สินค้าสต็อกต่ำ
+        // ============================================================
+
+        async function loadLowStock() {
+            try {
+                const threshold = parseInt(document.getElementById('low-stock-threshold').value) || 10;
+                const res = await fetch(`${API_BASE}/products.php?limit=10000`);
+                const data = await res.json();
+
+                if (data.success && data.data && data.data.products) {
+                    const products = data.data.products.filter(p => parseInt(p.stock || 0) <= threshold);
+                    renderLowStockTable(products);
+                }
+            } catch (error) {
+                console.error('Error loading low stock:', error);
+            }
+        }
+
+        function renderLowStockTable(products) {
+            const tbody = document.getElementById('low-stock-table');
+
+            if (products.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">
+                            <i class="fas fa-check-circle"></i> ไม่มีสินค้าสต็อกต่ำ
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = products.map(p => {
+                const stock = parseInt(p.stock || 0);
+                const status = stock <= 0
+                    ? '<span class="badge badge-danger">หมด</span>'
+                    : stock <= 5
+                        ? '<span class="badge badge-danger">ต่ำมาก</span>'
+                        : '<span class="badge badge-warning">ต่ำ</span>';
+
+                return `
+                    <tr>
+                        <td><code>${p.barcode}</code></td>
+                        <td><strong>${p.name}</strong></td>
+                        <td>${p.category_name || '-'}</td>
+                        <td class="${stock <= 0 ? 'text-danger' : 'text-warning'}"><strong>${stock}</strong></td>
+                        <td>${status}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ============================================================
+        // Tab 3: ประวัติการเปลี่ยนแปลง
+        // ============================================================
+
+        async function loadHistory() {
+            try {
+                const dateFrom = document.getElementById('history-date-from').value;
+                const dateTo = document.getElementById('history-date-to').value;
+                const type = document.getElementById('history-type-filter').value;
+                const productSearch = document.getElementById('history-product-search').value.trim();
+
+                let url = `${API_BASE}/stock.php?limit=${limit}&offset=${currentOffset}`;
+                if (dateFrom) url += `&date_from=${dateFrom}`;
+                if (dateTo) url += `&date_to=${dateTo}`;
+                if (type) url += `&change_type=${type}`;
+                if (productSearch) url += `&search=${encodeURIComponent(productSearch)}`;
+
+                const res = await fetch(url);
+                const data = await res.json();
+
+                if (data.success && data.data) {
+                    stockLogs = data.data.logs || [];
+                    renderHistoryTable();
+                    renderHistoryPagination(data.data.total);
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        function renderHistoryTable() {
+            const tbody = document.getElementById('history-table');
+            const noteDiv = document.getElementById('history-note');
+            let hasNegativeAdjustment = false;
+
+            if (stockLogs.length === 0) {
+                tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center text-muted">
+                    <i class="fas fa-inbox"></i> ไม่พบข้อมูล
+                </td>
+            </tr>
+        `;
+                if (noteDiv) noteDiv.style.display = 'none';
+                return;
+            }
+
+            const typeLabels = {
+                'sale': { text: 'ขาย', class: 'badge-danger' },
+                'adjustment': { text: 'ปรับปรุง', class: 'badge-warning' },
+                'import': { text: 'นำเข้า', class: 'badge-success' },
+                'return': { text: 'คืนสินค้า', class: 'badge-info' }
+            };
+
+            tbody.innerHTML = stockLogs.map(log => {
+                const date = new Date(log.created_at).toLocaleString('th-TH', {
+                    year: 'numeric', month: 'short', day: '2-digit',
+                    hour: '2-digit', minute: '2-digit'
+                });
+
+                const typeInfo = typeLabels[log.change_type] || { text: log.change_type, class: 'badge-info' };
+                const currentStock = log.current_stock !== null && log.current_stock !== undefined ? log.current_stock : '-';
+
+                // 🆕 แสดง 2 ค่าในช่อง "เปลี่ยนแปลง" ถ้าสต๊อกติดลบ
+                let changeHtml = '';
+                const currentStockNum = parseInt(currentStock);
+                const quantityChange = parseInt(log.quantity_change);
+
+                if (!isNaN(currentStockNum) && currentStockNum < 0 && quantityChange > 0) {
+                    // สต๊อกติดลบ + รับเข้า → แสดง 2 ค่า
+                    const adjustment = Math.abs(currentStockNum); // ส่วนที่ปรับจากติดลบเป็น 0
+                    const actual = quantityChange - adjustment; // ส่วนที่เติมจริง
+
+                    hasNegativeAdjustment = true;
+
+                    changeHtml = `
+                <span style="color: var(--danger); font-weight: bold;">+${adjustment}*</span>
+                <span style="color: var(--success); font-weight: bold;">+${actual}</span>
+            `;
+                } else {
+                    // ปกติ → แสดงค่าเดียว
+                    const changeClass = quantityChange < 0 ? 'text-danger' : 'text-success';
+                    const changeText = quantityChange > 0 ? `+${quantityChange}` : quantityChange;
+                    changeHtml = `<strong class="${changeClass}">${changeText}</strong>`;
+                }
+
+                return `
+            <tr>
+                <td>${date}</td>
+                <td><strong>${log.product_name || '-'}</strong></td>
+                <td><span class="badge ${typeInfo.class}">${typeInfo.text}</span></td>
+                <td style="text-align: center; font-weight: bold;">${currentStock}</td>
+                <td style="text-align: center;">${changeHtml}</td>
+                <td>${log.reason || '-'}</td>
+                <td>${log.reference_id || '-'}</td>
+            </tr>
+        `;
+            }).join('');
+
+            // 🆕 แสดงหมายเหตุถ้ามีรายการปรับจากติดลบ
+            if (noteDiv) {
+                noteDiv.style.display = hasNegativeAdjustment ? 'block' : 'none';
+            }
+        }
+
+        function renderHistoryPagination(total) {
+            const pagination = document.getElementById('history-pagination');
+            const totalPages = Math.ceil(total / limit);
+            const currentPage = Math.floor(currentOffset / limit) + 1;
+
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            html += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="goToHistoryPage(${currentPage - 1})">
+                <i class="fas fa-chevron-left"></i>
+            </button>`;
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === currentPage) {
+                    html += `<button class="active">${i}</button>`;
+                } else if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    html += `<button onclick="goToHistoryPage(${i})">${i}</button>`;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    html += `<button disabled>...</button>`;
+                }
+            }
+
+            html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="goToHistoryPage(${currentPage + 1})">
+                <i class="fas fa-chevron-right"></i>
+            </button>`;
+
+            pagination.innerHTML = html;
+        }
+
+        function goToHistoryPage(page) {
+            currentOffset = (page - 1) * limit;
+            loadHistory();
+        }
+
+        // ============================================================
+        // Search by name (for stock in)
+        // ============================================================
+
+        function searchByNameForStockIn(query) {
+            const resultsContainer = document.getElementById('stock-in-search-results');
+
+            if (query.length < 2) {
+                resultsContainer.classList.remove('show');
+                return;
+            }
+
+            const queryLower = query.toLowerCase();
+            const products = allProducts
+                .filter(p => p.name.toLowerCase().includes(queryLower) || (p.barcode && p.barcode.includes(query)))
+                .slice(0, 10);
+
+            if (products.length > 0) {
+                resultsContainer.innerHTML = products.map(p => `
+                    <div class="search-result-item" data-product-id="${p.id}">
+                        <div class="search-result-name">${p.name}</div>
+                        <div class="search-result-info">
+                            บาร์โค้ด: ${p.barcode} | สต็อก: ${p.stock} | ราคา: ฿${parseFloat(p.price).toFixed(2)}
+                        </div>
+                    </div>
+                `).join('');
+                resultsContainer.classList.add('show');
+
+                resultsContainer.querySelectorAll('.search-result-item').forEach((item, index) => {
+                    item.addEventListener('click', () => {
+                        showProductDetailModal(products[index]);
+                        document.getElementById('stock-in-search').value = '';
+                        resultsContainer.classList.remove('show');
+                    });
+                });
+            } else {
+                resultsContainer.classList.remove('show');
+            }
+        }
+
+        // ============================================================
+        // Event Listeners
+        // ============================================================
+
+        function setupEventListeners() {
+            // Tab switching
+            document.querySelectorAll('.stock-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.dataset.tab;
+                    document.querySelectorAll('.stock-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.querySelectorAll('.stock-content').forEach(c => c.style.display = 'none');
+                    document.getElementById(`tab-${tabName}`).style.display = 'block';
+
+                    if (tabName === 'stock-in') {
+                        focusScanInput();
+                    }
+                });
+            });
+
+            // Stock In - Barcode scan
+            const barcodeInput = document.getElementById('stock-in-barcode');
+            barcodeInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const barcode = convertThaiToNumber(barcodeInput.value.trim());
+                    if (barcode) {
+                        scanStockInBarcode(barcode);
+                    }
+                }
+            });
+
+            // Stock In - Name search
+            const nameSearchInput = document.getElementById('stock-in-search');
+            nameSearchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchByNameForStockIn(e.target.value.trim());
+                }, 200);
+            });
+
+            // Product Detail Modal
+            document.getElementById('btn-close-product-detail').addEventListener('click', () => {
+                document.getElementById('product-detail-modal').style.display = 'none';
+                currentProduct = null;
+                focusScanInput();
+            });
+            document.getElementById('btn-cancel-product-detail').addEventListener('click', () => {
+                document.getElementById('product-detail-modal').style.display = 'none';
+                currentProduct = null;
+                focusScanInput();
+            });
+            document.getElementById('btn-add-to-list').addEventListener('click', addToStockInList);
+            document.getElementById('product-detail-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'product-detail-modal') {
+                    document.getElementById('product-detail-modal').style.display = 'none';
+                    currentProduct = null;
+                    focusScanInput();
+                }
+            });
+            document.getElementById('detail-quantity').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addToStockInList();
+                }
+            });
+
+            // 🆕 Wholesale Calculator
+            document.getElementById('btn-toggle-wholesale').addEventListener('click', toggleWholesaleCalculator);
+            document.getElementById('wholesale-quantity').addEventListener('input', calculateWholesale);
+            document.getElementById('wholesale-price').addEventListener('input', calculateWholesale);
+            document.getElementById('btn-apply-wholesale').addEventListener('click', applyWholesale);
+
+            // Stock In - Clear & Save
+            document.getElementById('btn-clear-stock-in').addEventListener('click', clearStockInList);
+            document.getElementById('btn-save-stock-in').addEventListener('click', saveStockInBatch);
+
+            // Barcode Not Found Modal
+            document.getElementById('btn-cancel-new-product').addEventListener('click', () => {
+                hideBarcodeNotFoundModal();
+                focusScanInput();
+            });
+            document.getElementById('btn-add-new-product').addEventListener('click', () => {
+                if (pendingBarcode) {
+                    showNewProductModal(pendingBarcode);
+                }
+            });
+            document.getElementById('barcode-not-found-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'barcode-not-found-modal') {
+                    hideBarcodeNotFoundModal();
+                    focusScanInput();
+                }
+            });
+
+            // New Product Modal
+            document.getElementById('btn-close-new-product').addEventListener('click', () => {
+                hideNewProductModal();
+                focusScanInput();
+            });
+            document.getElementById('btn-cancel-save-product').addEventListener('click', () => {
+                hideNewProductModal();
+                focusScanInput();
+            });
+            document.getElementById('btn-save-new-product').addEventListener('click', saveNewProduct);
+            document.getElementById('new-product-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'new-product-modal') {
+                    hideNewProductModal();
+                    focusScanInput();
+                }
+            });
+            document.getElementById('new-product-form').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveNewProduct();
+                }
+            });
+
+            // ESC to close modals
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    const productModal = document.getElementById('product-detail-modal');
+                    const barcodeModal = document.getElementById('barcode-not-found-modal');
+                    const newProductModal = document.getElementById('new-product-modal');
+
+                    if (newProductModal.style.display === 'flex') {
+                        hideNewProductModal();
+                        focusScanInput();
+                    } else if (productModal.style.display === 'flex') {
+                        productModal.style.display = 'none';
+                        currentProduct = null;
+                        focusScanInput();
+                    } else if (barcodeModal.style.display === 'flex') {
+                        hideBarcodeNotFoundModal();
+                        focusScanInput();
+                    }
+                }
+            });
+
+            // Low stock
+            document.getElementById('btn-low-stock-search').addEventListener('click', loadLowStock);
+
+            // History
+            document.getElementById('btn-history-search').addEventListener('click', () => {
+                currentOffset = 0;
+                loadHistory();
+            });
+            document.getElementById('btn-history-clear').addEventListener('click', () => {
+                document.getElementById('history-date-from').value = '';
+                document.getElementById('history-date-to').value = '';
+                document.getElementById('history-type-filter').value = '';
+                document.getElementById('history-product-search').value = '';
+                currentOffset = 0;
+                loadHistory();
+            });
+
+            // Click outside to close search results
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#stock-in-search') && !e.target.closest('#stock-in-search-results')) {
+                    document.getElementById('stock-in-search-results').classList.remove('show');
+                }
+            });
+
+            // Settings modal
+            const settingsModal = document.getElementById('settings-modal');
+            const btnOpenSettings = document.getElementById('btn-open-settings');
+            const btnCloseSettings = document.getElementById('btn-close-settings');
+            const btnCancelSettings = document.getElementById('btn-cancel-settings');
+            const btnSaveSettings = document.getElementById('btn-save-settings');
+            const settingsTabs = document.querySelectorAll('.settings-tab');
+            const settingsContents = document.querySelectorAll('.settings-content');
+
+            btnOpenSettings.addEventListener('click', async (e) => {
+                e.preventDefault();
+                settingsModal.style.display = 'flex';
+                await loadSettings();
+            });
+
+            btnCloseSettings.addEventListener('click', () => settingsModal.style.display = 'none');
+            btnCancelSettings.addEventListener('click', () => settingsModal.style.display = 'none');
+            settingsModal.addEventListener('click', (e) => {
+                if (e.target === settingsModal) settingsModal.style.display = 'none';
+            });
+
+            settingsTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.dataset.tab;
+                    settingsTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    settingsContents.forEach(c => c.style.display = 'none');
+                    document.getElementById(`tab-${tabName}`).style.display = 'block';
+                });
+            });
+
+            btnSaveSettings.addEventListener('click', async () => {
+                const newSettings = {
+                    store_name: document.getElementById('setting-store-name').value,
+                    store_address: document.getElementById('setting-store-address').value,
+                    receipt_footer: document.getElementById('setting-receipt-footer').value,
+                    welcome_message: document.getElementById('setting-welcome-message').value,
+                    quick_items_per_row: document.getElementById('setting-quick-items-per-row').value,
+                    quick_items_count: document.getElementById('setting-quick-items-count').value,
+                    quick_items_days: document.getElementById('setting-quick-items-days').value
+                };
+
+                try {
+                    const res = await fetch(`${API_BASE}/settings.php`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ settings: newSettings })
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        alert('บันทึกการตั้งค่าสำเร็จ');
+                        settingsModal.style.display = 'none';
+                        await loadStoreName();
+                    } else {
+                        alert('เกิดข้อผิดพลาด: ' + data.message);
+                    }
+                } catch (error) {
+                    console.error('Error saving settings:', error);
+                    alert('ไม่สามารถบันทึกการตั้งค่าได้');
+                }
+            });
+        }
+
+        async function loadSettings() {
+            try {
+                const res = await fetch(`${API_BASE}/settings.php`);
+                const data = await res.json();
+                if (data.success && data.data && data.data.settings) {
+                    const s = data.data.settings;
+                    document.getElementById('setting-store-name').value = s.store_name || '';
+                    document.getElementById('setting-store-address').value = s.store_address || '';
+                    document.getElementById('setting-receipt-footer').value = s.receipt_footer || '';
+                    document.getElementById('setting-welcome-message').value = s.welcome_message || '';
+                    document.getElementById('setting-quick-items-per-row').value = s.quick_items_per_row || '6';
+                    document.getElementById('setting-quick-items-count').value = s.quick_items_count || '30';
+                    document.getElementById('setting-quick-items-days').value = s.quick_items_days || '30';
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+    </script>
+</body>
+
+</html>

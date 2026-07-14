@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS - POS & Stock Retail Manager</title>
+    <link rel="stylesheet" href="css/fonts.css">
+    <link rel="stylesheet" href="assets/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-boxes-stacked fa-2x"></i>
+            <h2>POS & Stock Retail Manager</h2>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="has-branch">
+                <a href="index.html">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <ul class="branch-menu">
+                    <li><a href="#" id="btn-open-settings"><i class="fas fa-gear"></i><span>ตั้งค่าระบบ</span></a></li>
+                </ul>
+            </li>
+            <li><a href="pos.html" class="active"><i class="fas fa-cash-register"></i><span>POS (คิดบิลขาย)</span></a></li>
+            <li><a href="products.html"><i class="fas fa-box"></i><span>จัดการสินค้า</span></a></li>
+            <li><a href="categories.html"><i class="fas fa-tags"></i><span>จัดการหมวดหมู่</span></a></li>
+            <li><a href="sales.html"><i class="fas fa-receipt"></i><span>จัดการบิล</span></a></li>
+            <li><a href="stock.html"><i class="fas fa-warehouse"></i><span>การจัดการสต๊อก</span></a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-wrapper">
+        <!-- Topbar -->
+        <header class="topbar">
+            <h1><i class="fas fa-cash-register"></i> POS - คิดบิลขาย</h1>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <span id="store-name" style="color: var(--text-muted); font-size: 0.9rem; font-weight: 500;"></span>
+                <span id="current-date" style="color: var(--text-muted); font-size: 0.9rem;"></span>
+            </div>
+        </header>
+
+        <!-- POS Container -->
+        <main class="content-area">
+            <div class="split-layout">
+                <!-- Left Side - Search + Quick Items -->
+                <div class="split-main">
+                    <!-- Search Section -->
+                    <div class="pos-search-section">
+                        <div class="pos-search-row">
+                            <div class="pos-search-field">
+                                <label><i class="fas fa-barcode"></i> บาร์โค้ด</label>
+                                <input type="text" id="barcode-input" placeholder="สแกนหรือพิมพ์บาร์โค้ด แล้วกด Enter" autocomplete="off">
+                            </div>
+                            <div class="pos-search-field">
+                                <label><i class="fas fa-search"></i> ค้นหาชื่อสินค้า</label>
+                                <input type="text" id="name-search-input" placeholder="พิมพ์ชื่อสินค้า..." autocomplete="off">
+                                <div class="search-results" id="search-results"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Items Header -->
+                    <div class="quick-items-header">
+                        <h3><i class="fas fa-bolt"></i> รายการสินค้าด่วน</h3>
+                        <div class="category-filter" id="category-filter">
+                            <button class="category-btn active" data-category="all">⭐ ขายดี</button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Items Grid -->
+                    <div class="quick-items-grid">
+                        <div class="quick-items-grid-inner" id="quick-items-grid">
+                            <div class="cart-empty">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>กำลังโหลดสินค้า...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side - Cart & Summary -->
+                <div class="split-panel">
+                    <!-- Held Bills -->
+                    <div class="held-bills-container">
+                        <div class="held-bills-header">บิลที่พักไว้ (คลิกเพื่อสลับ)</div>
+                        <div class="held-bills-list" id="held-bills-list">
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">ยังไม่มีบิลที่พักไว้</span>
+                        </div>
+                    </div>
+
+                    <!-- Cart -->
+                    <div class="cart-section">
+                        <div class="cart-header">
+                            <span><i class="fas fa-shopping-cart"></i> รายการสินค้า ก่อนชำระเงิน</span>
+                            <button class="btn btn-danger btn-sm" id="btn-clear-cart">
+                                <i class="fas fa-trash"></i> ล้างตะกร้า
+                            </button>
+                        </div>
+
+                        <div class="cart-items" id="cart-items">
+                            <div class="cart-empty">
+                                <i class="fas fa-shopping-cart"></i>
+                                <p>ตะกร้าว่างเปล่า</p>
+                                <small>สแกนบาร์โค้ดหรือคลิกสินค้าเพื่อเพิ่มลงตะกร้า</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="summary-section">
+                        <div class="summary-row">
+                            <span>ยอดรวม</span>
+                            <span id="summary-subtotal">฿0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>ส่วนลด</span>
+                            <input type="number" class="discount-input" id="discount-input" value="0" min="0" step="0.01">
+                        </div>
+                        <div class="summary-row total">
+                            <span>ยอดสุทธิ</span>
+                            <span id="summary-total">฿0.00</span>
+                        </div>
+
+                        <div class="payment-methods">
+                            <button class="payment-method-btn active" data-method="cash">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>เงินสด</span>
+                            </button>
+                            <button class="payment-method-btn" data-method="transfer">
+                                <i class="fas fa-university"></i>
+                                <span>โอนเงิน</span>
+                            </button>
+                            <button class="payment-method-btn" data-method="other">
+                                <i class="fas fa-credit-card"></i>
+                                <span>อื่นๆ</span>
+                            </button>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn btn-warning" id="btn-hold-bill">
+                                <i class="fas fa-pause-circle"></i> พักบิล
+                            </button>
+                            <button class="btn btn-success" id="btn-checkout">
+                                <i class="fas fa-check-circle"></i> ชำระเงิน
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-gear"></i> ตั้งค่าระบบ</h3>
+                <button class="modal-close" id="btn-close-settings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tab-group">
+                    <button class="tab-btn active settings-tab" data-tab="main">
+                        <i class="fas fa-store"></i> ข้อมูลร้าน
+                    </button>
+                    <button class="tab-btn settings-tab" data-tab="other">
+                        <i class="fas fa-sliders-h"></i> ตั้งค่าอื่นๆ
+                    </button>
+                </div>
+
+                <div id="tab-main" class="settings-content">
+                    <form id="form-main-settings">
+                        <div class="form-group">
+                            <label class="form-label">ชื่อร้าน <span style="color: var(--danger);">*</span></label>
+                            <input type="text" class="form-control" id="setting-store-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ที่อยู่ร้าน</label>
+                            <textarea class="form-control" id="setting-store-address" rows="2"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ข้อความท้ายใบเสร็จ</label>
+                            <input type="text" class="form-control" id="setting-receipt-footer">
+                        </div>
+                    </form>
+                </div>
+
+                <div id="tab-other" class="settings-content" style="display: none;">
+                    <form id="form-other-settings">
+                        <div class="form-group">
+                            <label class="form-label">ข้อความต้อนรับ</label>
+                            <input type="text" class="form-control" id="setting-welcome-message">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">จำนวนปุ่ม Quick Items ต่อแถว</label>
+                            <select class="form-control" id="setting-quick-items-per-row">
+                                <option value="5">5 ปุ่ม/แถว</option>
+                                <option value="6" selected>6 ปุ่ม/แถว</option>
+                                <option value="7">7 ปุ่ม/แถว</option>
+                                <option value="8">8 ปุ่ม/แถว</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">จำนวนสินค้าขายดีที่แสดง</label>
+                            <input type="number" class="form-control" id="setting-quick-items-count" min="10" max="100" value="30">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ระยะเวลาที่ย้อนดู (วัน)</label>
+                            <input type="number" class="form-control" id="setting-quick-items-days" min="7" max="365" value="30">
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="btn-cancel-settings">ยกเลิก</button>
+                <button class="btn btn-primary" id="btn-save-settings">
+                    <i class="fas fa-save"></i> บันทึกการตั้งค่า
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: บาร์โค้ดไม่พบ -->
+    <div class="modal" id="barcode-not-found-modal" style="display: none;">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-question-circle" style="color: var(--warning);"></i> ไม่พบสินค้า</h3>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 1.1rem; margin-bottom: 1rem;">
+                    ไม่พบสินค้าที่มีบาร์โค้ด:
+                </p>
+                <div style="background: var(--bg-main); padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1rem;">
+                    <strong style="font-size: 1.5rem; color: var(--primary);" id="not-found-barcode">-</strong>
+                </div>
+                <p style="color: var(--text-muted);">
+                    ต้องการเพิ่มสินค้านี้เป็นสินค้าใหม่หรือไม่?
+                </p>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button class="btn btn-secondary" id="btn-cancel-new-product">
+                    <i class="fas fa-times"></i> ยังไม่เพิ่มสินค้านี้
+                </button>
+                <button class="btn btn-primary" id="btn-add-new-product">
+                    <i class="fas fa-plus"></i> เพิ่มสินค้าชิ้นนี้
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: เพิ่มสินค้าด่วน -->
+    <div class="modal" id="new-product-modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus-circle" style="color: var(--success);"></i> เพิ่มสินค้าด่วน</h3>
+                <button class="modal-close" id="btn-close-new-product">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="new-product-form">
+                    <div class="form-group">
+                        <label><i class="fas fa-barcode"></i> บาร์โค้ด <span style="color: var(--danger);">*</span></label>
+                        <input type="text" id="new-product-barcode" class="form-control" required readonly 
+                               style="background: var(--bg-main); font-size: 1.1rem; font-weight: bold;">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-box"></i> ชื่อสินค้า <span style="color: var(--danger);">*</span></label>
+                        <input type="text" id="new-product-name" class="form-control" required 
+                               placeholder="กรอกชื่อสินค้า...">
+                    </div>
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label><i class="fas fa-tag"></i> ราคาขาย <span style="color: var(--danger);">*</span></label>
+                            <input type="number" id="new-product-price" class="form-control" required 
+                                   min="0" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-coins"></i> ต้นทุน</label>
+                            <input type="number" id="new-product-cost" class="form-control" 
+                                   min="0" step="0.01" placeholder="0.00" value="0">
+                        </div>
+                    </div>
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label><i class="fas fa-cubes"></i> สต็อกเริ่มต้น</label>
+                            <input type="number" id="new-product-stock" class="form-control" 
+                                   min="0" step="1" placeholder="0" value="1">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-folder"></i> หมวดหมู่</label>
+                            <select id="new-product-category" class="form-control">
+                                <option value="">-- เลือกหมวดหมู่ --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-ruler"></i> หน่วย</label>
+                        <input type="text" id="new-product-unit" class="form-control" 
+                               placeholder="เช่น ชิ้น, กล่อง, ถุง" value="ชิ้น">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button class="btn btn-secondary" id="btn-cancel-save-product">
+                    <i class="fas fa-times"></i> ยกเลิก
+                </button>
+                <button class="btn btn-success" id="btn-save-new-product">
+                    <i class="fas fa-save"></i> บันทึกและเพิ่มลงตะกร้า
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        
+        // Thai to Number Mapping
+        const THAI_TO_NUMBER = {
+            'ๅ': '1', '/': '2', '-': '3', 'ภ': '4', 'ถ': '5',
+            'ุ': '6',
+            'ึ': '7',
+            'ค': '8', 'ต': '9', 'จ': '0'
+        };
+
+        function convertThaiToNumber(text) {
+            const normalized = text.normalize('NFD');
+            let result = '';
+            for (let char of normalized) {
+                if (/[0-9]/.test(char)) result += char;
+                else if (THAI_TO_NUMBER[char]) result += THAI_TO_NUMBER[char];
+            }
+            return result;
+        }
+        
+        // State
+        let cart = [];
+        let heldBills = [];
+        let currentHeldBillId = null;
+        let settings = {};
+        let categories = [];
+        let quickItems = [];
+        let allProducts = [];
+        let selectedCategory = 'all';
+        let paymentMethod = 'cash';
+        let searchTimeout = null;
+        let pendingBarcode = null;
+
+        // Session ID
+        function getSessionId() {
+            let sessionId = localStorage.getItem('pos_session_id');
+            if (!sessionId) {
+                sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('pos_session_id', sessionId);
+            }
+            return sessionId;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            setCurrentDate();
+            await Promise.all([
+                loadSettings(),
+                loadCategories(),  // 🆕 โหลดหมวดหมู่ก่อน (เพื่อแสดง tab ตาม sort_order)
+                loadAllProducts(),
+                loadHeldBills()
+            ]);
+            setupEventListeners();
+            
+            focusBarcode();
+            
+            console.log('✅ POS initialized');
+        });
+
+        function setCurrentDate() {
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            document.getElementById('current-date').textContent = now.toLocaleDateString('th-TH', options);
+        }
+
+        async function loadSettings() {
+            try {
+                const res = await fetch(`${API_BASE}/settings.php`);
+                const data = await res.json();
+                if (data.success && data.data && data.data.settings) {
+                    settings = data.data.settings;
+                    const storeName = settings.store_name || 'ร้านค้า';
+                    document.getElementById('store-name').textContent = storeName;
+                    document.title = `POS - ${storeName}`;
+                    document.documentElement.style.setProperty('--items-per-row', settings.quick_items_per_row || 6);
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        // 🆕 โหลดหมวดหมู่ (เรียงตาม sort_order)
+        async function loadCategories() {
+            try {
+                const res = await fetch(`${API_BASE}/categories.php`);
+                const data = await res.json();
+                if (data.success && data.data && data.data.categories) {
+                    categories = data.data.categories;
+                    renderCategoryFilter();
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        // Load all products
+        async function loadAllProducts() {
+            try {
+                const [productsRes, topSellingRes] = await Promise.all([
+                    fetch(`${API_BASE}/products.php?limit=9999`),
+                    fetch(`${API_BASE}/products.php?top_selling=${settings.quick_items_count || 30}&days=${settings.quick_items_days || 30}`)
+                ]);
+
+                const productsData = await productsRes.json();
+                const topSellingData = await topSellingRes.json();
+
+                if (productsData.success && productsData.data && productsData.data.products) {
+                    allProducts = productsData.data.products;
+                    console.log(`✅ โหลดสินค้าทั้งหมด ${allProducts.length} รายการ`);
+                }
+
+                if (topSellingData.success && topSellingData.data && topSellingData.data.products) {
+                    quickItems = topSellingData.data.products;
+                } else {
+                    quickItems = allProducts.slice(0, parseInt(settings.quick_items_count) || 30);
+                }
+
+                renderQuickItems();
+
+            } catch (error) {
+                console.error('Error loading products:', error);
+                document.getElementById('quick-items-grid').innerHTML = `
+                    <div class="cart-empty">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>ไม่สามารถโหลดสินค้าได้ กรุณารีเฟรชหน้า</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 🆕 Render category filter (เรียงตาม sort_order)
+        function renderCategoryFilter() {
+            const container = document.getElementById('category-filter');
+            
+            // เริ่มด้วย "⭐ ขายดี"
+            container.innerHTML = '<button class="category-btn active" data-category="all">⭐ ขายดี</button>';
+            
+            // เรียงตาม sort_order (มาจาก API แล้ว)
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = 'category-btn';
+                btn.dataset.category = cat.id;
+                btn.textContent = cat.name;
+                container.appendChild(btn);
+            });
+
+            container.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    container.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedCategory = btn.dataset.category;
+
+                    if (selectedCategory === 'all') {
+                        renderQuickItems();
+                    } else {
+                        const catId = parseInt(selectedCategory);
+                        const filtered = allProducts.filter(p => parseInt(p.category_id) === catId);
+                        renderCategoryItems(filtered);
+                    }
+                    
+                    focusBarcode();
+                });
+            });
+        }
+
+        // Render category items
+        function renderCategoryItems(items) {
+            const container = document.getElementById('quick-items-grid');
+
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="cart-empty" style="grid-column: 1/-1;">
+                        <i class="fas fa-box-open"></i>
+                        <p>ไม่มีสินค้าในหมวดนี้</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = items.map(item => `
+                <button class="quick-item-btn" data-product-id="${item.id}">
+                    <div class="quick-item-name">${item.name}</div>
+                    <div class="quick-item-price">฿${parseFloat(item.price).toFixed(2)}</div>
+                </button>
+            `).join('');
+
+            container.querySelectorAll('.quick-item-btn').forEach((btn, index) => {
+                btn.addEventListener('click', () => {
+                    addProductToCart(items[index]);
+                });
+            });
+            
+            focusBarcode();
+        }
+
+        // Render quick items
+        function renderQuickItems() {
+            const container = document.getElementById('quick-items-grid');
+
+            if (quickItems.length === 0) {
+                container.innerHTML = `
+                    <div class="cart-empty" style="grid-column: 1/-1;">
+                        <i class="fas fa-box-open"></i>
+                        <p>ยังไม่มีข้อมูลการขาย</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = quickItems.map(item => `
+                <button class="quick-item-btn" data-product-id="${item.id}">
+                    <div class="quick-item-name">${item.name}</div>
+                    <div class="quick-item-price">฿${parseFloat(item.price).toFixed(2)}</div>
+                </button>
+            `).join('');
+
+            container.querySelectorAll('.quick-item-btn').forEach((btn, index) => {
+                btn.addEventListener('click', () => {
+                    addProductToCart(quickItems[index]);
+                });
+            });
+            
+            focusBarcode();
+        }
+
+        // Add to cart
+        function addToCart(productId) {
+            const product = allProducts.find(p => p.id === productId);
+            if (product) {
+                addProductToCart(product);
+            } else {
+                fetchProductAndAddToCart(productId);
+            }
+        }
+
+        // เพิ่มสินค้าลงตะกร้า
+        function addProductToCart(product) {
+            const existingItem = cart.find(item => item.product_id === product.id);
+            if (existingItem) {
+                existingItem.quantity++;
+                existingItem.subtotal = existingItem.quantity * existingItem.price;
+            } else {
+                cart.push({
+                    product_id: product.id,
+                    name: product.name,
+                    barcode: product.barcode,
+                    price: parseFloat(product.price),
+                    quantity: 1,
+                    subtotal: parseFloat(product.price)
+                });
+            }
+
+            renderCart();
+            updateSummary();
+            focusBarcode();
+        }
+
+        // Fetch product and add to cart
+        async function fetchProductAndAddToCart(productId) {
+            try {
+                const res = await fetch(`${API_BASE}/products.php?id=${productId}`);
+                const data = await res.json();
+                if (data.success && data.data && data.data.product) {
+                    addProductToCart(data.data.product);
+                }
+            } catch (error) {
+                console.error('Error fetching product:', error);
+            }
+        }
+
+        // Render cart
+        function renderCart() {
+            const container = document.getElementById('cart-items');
+
+            if (cart.length === 0) {
+                container.innerHTML = `
+                    <div class="cart-empty">
+                        <i class="fas fa-shopping-cart"></i>
+                        <p>ตะกร้าว่างเปล่า</p>
+                        <small>สแกนบาร์โค้ดหรือคลิกสินค้าเพื่อเพิ่มลงตะกร้า</small>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = cart.map((item, index) => `
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${item.name}</div>
+                        <div class="cart-item-price">฿${item.price.toFixed(2)} / ชิ้น</div>
+                    </div>
+                    <div class="cart-item-controls">
+                        <button class="qty-btn" onclick="updateQuantity(${index}, -1)">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <span class="cart-item-qty">${item.quantity}</span>
+                        <button class="qty-btn" onclick="updateQuantity(${index}, 1)">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <div class="cart-item-subtotal">฿${item.subtotal.toFixed(2)}</div>
+                </div>
+            `).join('');
+        }
+
+        // Update quantity
+        function updateQuantity(index, change) {
+            cart[index].quantity += change;
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            } else {
+                cart[index].subtotal = cart[index].quantity * cart[index].price;
+            }
+            renderCart();
+            updateSummary();
+        }
+
+        // Update summary
+        function updateSummary() {
+            const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
+            const discount = parseFloat(document.getElementById('discount-input').value) || 0;
+            const total = Math.max(0, subtotal - discount);
+
+            document.getElementById('summary-subtotal').textContent = `฿${subtotal.toFixed(2)}`;
+            document.getElementById('summary-total').textContent = `฿${total.toFixed(2)}`;
+        }
+
+        // Load held bills
+        async function loadHeldBills() {
+            try {
+                const sessionId = getSessionId();
+                const res = await fetch(`${API_BASE}/hold_bills.php?session_id=${sessionId}`);
+                const data = await res.json();
+                if (data.success && data.data && data.data.held_bills) {
+                    heldBills = data.data.held_bills;
+                    renderHeldBills();
+                }
+            } catch (error) {
+                console.error('Error loading held bills:', error);
+            }
+        }
+
+        // Render held bills
+        function renderHeldBills() {
+            const container = document.getElementById('held-bills-list');
+
+            if (heldBills.length === 0) {
+                container.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">ยังไม่มีบิลที่พักไว้</span>';
+                return;
+            }
+
+            container.innerHTML = heldBills.map(bill => `
+                <div class="held-bill-badge ${bill.id === currentHeldBillId ? 'active' : ''}" 
+                     data-bill-id="${bill.id}" 
+                     title="บิลที่ ${bill.bill_index} - ${bill.item_count} รายการ - ฿${bill.total_amount.toFixed(2)}">
+                    ${bill.bill_index}
+                </div>
+            `).join('');
+
+            container.querySelectorAll('.held-bill-badge').forEach(badge => {
+                badge.addEventListener('click', () => {
+                    const billId = parseInt(badge.dataset.billId);
+                    resumeHeldBill(billId);
+                });
+            });
+        }
+
+        // Hold bill
+        async function holdBill() {
+            if (cart.length === 0) {
+                alert('ไม่มีสินค้าในตะกร้า');
+                focusBarcode();
+                return;
+            }
+
+            try {
+                const sessionId = getSessionId();
+                const res = await fetch(`${API_BASE}/hold_bills.php?session_id=${sessionId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        items: cart,
+                        discount: parseFloat(document.getElementById('discount-input').value) || 0,
+                        payment_method: paymentMethod
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    cart = [];
+                    currentHeldBillId = null;
+                    document.getElementById('discount-input').value = 0;
+                    renderCart();
+                    updateSummary();
+                    await loadHeldBills();
+                    alert('พักบิลสำเร็จ');
+                    focusBarcode();
+                } else {
+                    alert('ไม่สามารถพักบิลได้: ' + data.message);
+                    focusBarcode();
+                }
+            } catch (error) {
+                console.error('Error holding bill:', error);
+                alert('เกิดข้อผิดพลาดในการพักบิล');
+                focusBarcode();
+            }
+        }
+
+        // Resume held bill
+        async function resumeHeldBill(billId) {
+            const bill = heldBills.find(b => b.id === billId);
+            if (!bill) return;
+
+            if (cart.length > 0 && currentHeldBillId !== billId) {
+                const confirmHold = confirm('ต้องการพักบิลปัจจุบันก่อนหรือไม่?');
+                if (confirmHold) {
+                    await holdBill();
+                } else {
+                    return;
+                }
+            }
+
+            cart = bill.items;
+            currentHeldBillId = bill.id;
+            document.getElementById('discount-input').value = bill.discount;
+            paymentMethod = bill.payment_method;
+            renderCart();
+            updateSummary();
+            updatePaymentMethodUI();
+
+            try {
+                const sessionId = getSessionId();
+                await fetch(`${API_BASE}/hold_bills.php?id=${billId}&session_id=${sessionId}`, {
+                    method: 'DELETE'
+                });
+                await loadHeldBills();
+            } catch (error) {
+                console.error('Error deleting held bill:', error);
+            }
+        }
+
+        // Focus barcode
+        function focusBarcode() {
+            setTimeout(() => {
+                document.getElementById('barcode-input').focus();
+            }, 0);
+        }
+
+        // Clear cart
+        async function clearCart() {
+            if (cart.length === 0) {
+                focusBarcode();
+                return;
+            }
+
+            const confirmClear = confirm('ต้องการล้างตะกร้าหรือไม่?');
+            if (!confirmClear) {
+                focusBarcode();
+                return;
+            }
+
+            if (currentHeldBillId) {
+                try {
+                    const sessionId = getSessionId();
+                    await fetch(`${API_BASE}/hold_bills.php?id=${currentHeldBillId}&session_id=${sessionId}`, {
+                        method: 'DELETE'
+                    });
+                    await loadHeldBills();
+                } catch (error) {
+                    console.error('Error deleting held bill:', error);
+                }
+            }
+
+            cart = [];
+            currentHeldBillId = null;
+            document.getElementById('discount-input').value = 0;
+            renderCart();
+            updateSummary();
+            focusBarcode();
+        }
+
+        // Checkout
+        async function checkout() {
+            if (cart.length === 0) {
+                alert('ไม่มีสินค้าในตะกร้า');
+                focusBarcode();
+                return;
+            }
+
+            const confirmCheckout = confirm('ยืนยันการชำระเงิน?');
+            if (!confirmCheckout) {
+                focusBarcode();
+                return;
+            }
+
+            try {
+                const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
+                const discount = parseFloat(document.getElementById('discount-input').value) || 0;
+
+                const res = await fetch(`${API_BASE}/sales.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        items: cart.map(item => ({
+                            product_id: item.product_id,
+                            quantity: item.quantity,
+                            price: item.price
+                        })),
+                        discount: discount,
+                        payment_method: paymentMethod
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    alert('ชำระเงินสำเร็จ! เลขบิล: ' + data.data.bill_no);
+                    cart = [];
+                    currentHeldBillId = null;
+                    document.getElementById('discount-input').value = 0;
+                    renderCart();
+                    updateSummary();
+                    focusBarcode();
+                } else {
+                    alert('ไม่สามารถชำระเงินได้: ' + data.message);
+                    focusBarcode();
+                }
+            } catch (error) {
+                console.error('Error checking out:', error);
+                alert('เกิดข้อผิดพลาดในการชำระเงิน');
+                focusBarcode();
+            }
+        }
+
+        // Update payment method UI
+        function updatePaymentMethodUI() {
+            document.querySelectorAll('.payment-method-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.method === paymentMethod);
+            });
+        }
+
+        // Barcode search
+        function searchByBarcode(barcode) {
+            if (!barcode) return;
+
+            const matches = allProducts.filter(p => p.barcode === barcode);
+
+            if (matches.length === 1) {
+                addProductToCart(matches[0]);
+                document.getElementById('barcode-input').value = '';
+                focusBarcode();
+            } else if (matches.length > 1) {
+                alert('พบสินค้าหลายรายการ กรุณาระบุบาร์โค้ดให้ชัดเจน');
+                focusBarcode();
+            } else {
+                document.getElementById('barcode-input').value = '';
+                showBarcodeNotFoundModal(barcode);
+            }
+        }
+
+        // Modal: บาร์โค้ดไม่พบ
+        function showBarcodeNotFoundModal(barcode) {
+            pendingBarcode = barcode;
+            document.getElementById('not-found-barcode').textContent = barcode;
+            document.getElementById('barcode-not-found-modal').style.display = 'flex';
+            
+            setTimeout(() => {
+                document.getElementById('btn-add-new-product').focus();
+            }, 100);
+        }
+
+        function hideBarcodeNotFoundModal() {
+            document.getElementById('barcode-not-found-modal').style.display = 'none';
+            pendingBarcode = null;
+        }
+
+        function showNewProductModal(barcode) {
+            hideBarcodeNotFoundModal();
+            
+            document.getElementById('new-product-barcode').value = barcode;
+            document.getElementById('new-product-name').value = '';
+            document.getElementById('new-product-price').value = '';
+            document.getElementById('new-product-cost').value = '0';
+            document.getElementById('new-product-stock').value = '1';
+            document.getElementById('new-product-unit').value = 'ชิ้น';
+            
+            const categorySelect = document.getElementById('new-product-category');
+            categorySelect.innerHTML = '<option value="">-- เลือกหมวดหมู่ --</option>';
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.name;
+                categorySelect.appendChild(option);
+            });
+            
+            document.getElementById('new-product-modal').style.display = 'flex';
+            
+            setTimeout(() => {
+                document.getElementById('new-product-name').focus();
+            }, 100);
+        }
+
+        function hideNewProductModal() {
+            document.getElementById('new-product-modal').style.display = 'none';
+        }
+
+        async function saveNewProduct() {
+            const barcode = document.getElementById('new-product-barcode').value.trim();
+            const name = document.getElementById('new-product-name').value.trim();
+            const price = parseFloat(document.getElementById('new-product-price').value) || 0;
+            const cost = parseFloat(document.getElementById('new-product-cost').value) || 0;
+            const stock = parseInt(document.getElementById('new-product-stock').value) || 0;
+            const categoryId = document.getElementById('new-product-category').value;
+            const unit = document.getElementById('new-product-unit').value.trim() || 'ชิ้น';
+            
+            if (!barcode) {
+                alert('กรุณากรอกบาร์โค้ด');
+                return;
+            }
+            if (!name) {
+                alert('กรุณากรอกชื่อสินค้า');
+                document.getElementById('new-product-name').focus();
+                return;
+            }
+            if (price <= 0) {
+                alert('กรุณากรอกราคาขายมากกว่า 0');
+                document.getElementById('new-product-price').focus();
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_BASE}/products.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        barcode: barcode,
+                        barcode_status: 1,
+                        price: price,
+                        cost: cost,
+                        stock: stock,
+                        unit: unit,
+                        category_id: categoryId ? parseInt(categoryId) : null,
+                        category: ''
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    const newProduct = data.data;
+                    allProducts.push({
+                        id: newProduct.id,
+                        name: newProduct.name,
+                        barcode: newProduct.barcode,
+                        price: parseFloat(newProduct.price),
+                        cost: parseFloat(newProduct.cost),
+                        stock: parseInt(newProduct.stock),
+                        unit: newProduct.unit,
+                        category_id: newProduct.category_id,
+                        barcode_status: parseInt(newProduct.barcode_status)
+                    });
+                    
+                    hideNewProductModal();
+                    addProductToCart(allProducts[allProducts.length - 1]);
+                    alert(`✅ เพิ่มสินค้า "${name}" สำเร็จ และเพิ่มลงตะกร้าแล้ว`);
+                    focusBarcode();
+                } else {
+                    alert('❌ ไม่สามารถเพิ่มสินค้าได้: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error saving new product:', error);
+                alert('เกิดข้อผิดพลาดในการบันทึกสินค้า');
+            }
+        }
+
+        function cancelNewProduct() {
+            hideNewProductModal();
+            focusBarcode();
+        }
+
+        // Name search
+        function searchByName(query) {
+            const resultsContainer = document.getElementById('search-results');
+
+            if (query.length < 2) {
+                resultsContainer.classList.remove('show');
+                return;
+            }
+
+            const queryLower = query.toLowerCase();
+            const products = allProducts
+                .filter(p =>
+                    p.name.toLowerCase().includes(queryLower) ||
+                    (p.barcode && p.barcode.includes(query))
+                )
+                .slice(0, 10);
+
+            if (products.length > 0) {
+                resultsContainer.innerHTML = products.map(p => `
+                    <div class="search-result-item" data-product-id="${p.id}">
+                        <div class="search-result-name">${p.name}</div>
+                        <div class="search-result-info">
+                            บาร์โค้ด: ${p.barcode} | ราคา: ฿${parseFloat(p.price).toFixed(2)} | สต็อก: ${p.stock}
+                        </div>
+                    </div>
+                `).join('');
+                resultsContainer.classList.add('show');
+
+                resultsContainer.querySelectorAll('.search-result-item').forEach((item, index) => {
+                    item.addEventListener('click', () => {
+                        addProductToCart(products[index]);
+                        document.getElementById('name-search-input').value = '';
+                        resultsContainer.classList.remove('show');
+                        focusBarcode();
+                    });
+                });
+            } else {
+                resultsContainer.classList.remove('show');
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Barcode input
+            const barcodeInput = document.getElementById('barcode-input');
+            barcodeInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const barcode = convertThaiToNumber(barcodeInput.value.trim());
+                    if (barcode) {
+                        searchByBarcode(barcode);
+                    }
+                }
+            });
+
+            // Name search input
+            const nameSearchInput = document.getElementById('name-search-input');
+            nameSearchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchByName(e.target.value.trim());
+                }, 100);
+            });
+
+            // Click outside to close search results
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.search-input-wrapper')) {
+                    document.getElementById('search-results').classList.remove('show');
+                }
+            });
+
+            // Discount input
+            document.getElementById('discount-input').addEventListener('input', updateSummary);
+
+            // Payment method buttons
+            document.querySelectorAll('.payment-method-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    paymentMethod = btn.dataset.method;
+                    updatePaymentMethodUI();
+                });
+            });
+
+            // Hold bill button
+            document.getElementById('btn-hold-bill').addEventListener('click', holdBill);
+
+            // Clear cart button
+            document.getElementById('btn-clear-cart').addEventListener('click', clearCart);
+
+            // Checkout button
+            document.getElementById('btn-checkout').addEventListener('click', checkout);
+
+            // Modal: บาร์โค้ดไม่พบ
+            document.getElementById('btn-cancel-new-product').addEventListener('click', () => {
+                hideBarcodeNotFoundModal();
+                focusBarcode();
+            });
+
+            document.getElementById('btn-add-new-product').addEventListener('click', () => {
+                if (pendingBarcode) {
+                    showNewProductModal(pendingBarcode);
+                }
+            });
+
+            // Modal: เพิ่มสินค้าด่วน
+            document.getElementById('btn-close-new-product').addEventListener('click', cancelNewProduct);
+            document.getElementById('btn-cancel-save-product').addEventListener('click', cancelNewProduct);
+            document.getElementById('btn-save-new-product').addEventListener('click', saveNewProduct);
+            document.getElementById('new-product-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'new-product-modal') {
+                    cancelNewProduct();
+                }
+            });
+            document.getElementById('new-product-form').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveNewProduct();
+                }
+            });
+
+            // ESC to close modals
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    const barcodeModal = document.getElementById('barcode-not-found-modal');
+                    const productModal = document.getElementById('new-product-modal');
+                    
+                    if (productModal.style.display === 'flex') {
+                        cancelNewProduct();
+                    } else if (barcodeModal.style.display === 'flex') {
+                        hideBarcodeNotFoundModal();
+                        focusBarcode();
+                    }
+                }
+            });
+
+            // Settings modal
+            const settingsModal = document.getElementById('settings-modal');
+            const btnOpenSettings = document.getElementById('btn-open-settings');
+            const btnCloseSettings = document.getElementById('btn-close-settings');
+            const btnCancelSettings = document.getElementById('btn-cancel-settings');
+            const btnSaveSettings = document.getElementById('btn-save-settings');
+            const settingsTabs = document.querySelectorAll('.settings-tab');
+            const settingsContents = document.querySelectorAll('.settings-content');
+
+            btnOpenSettings.addEventListener('click', async (e) => {
+                e.preventDefault();
+                settingsModal.style.display = 'flex';
+                await loadSettingsForModal();
+            });
+
+            btnCloseSettings.addEventListener('click', () => settingsModal.style.display = 'none');
+            btnCancelSettings.addEventListener('click', () => settingsModal.style.display = 'none');
+            settingsModal.addEventListener('click', (e) => {
+                if (e.target === settingsModal) settingsModal.style.display = 'none';
+            });
+
+            settingsTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.dataset.tab;
+                    settingsTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    settingsContents.forEach(content => content.style.display = 'none');
+                    document.getElementById(`tab-${tabName}`).style.display = 'block';
+                });
+            });
+
+            btnSaveSettings.addEventListener('click', async () => {
+                const newSettings = {
+                    store_name: document.getElementById('setting-store-name').value,
+                    store_address: document.getElementById('setting-store-address').value,
+                    receipt_footer: document.getElementById('setting-receipt-footer').value,
+                    welcome_message: document.getElementById('setting-welcome-message').value,
+                    quick_items_per_row: document.getElementById('setting-quick-items-per-row').value,
+                    quick_items_count: document.getElementById('setting-quick-items-count').value,
+                    quick_items_days: document.getElementById('setting-quick-items-days').value
+                };
+
+                try {
+                    const res = await fetch(`${API_BASE}/settings.php`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ settings: newSettings })
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        alert('บันทึกการตั้งค่าสำเร็จ');
+                        settingsModal.style.display = 'none';
+                        await Promise.all([loadSettings(), loadAllProducts()]);
+                    } else {
+                        alert('เกิดข้อผิดพลาด: ' + data.message);
+                    }
+                } catch (error) {
+                    console.error('Error saving settings:', error);
+                    alert('ไม่สามารถบันทึกการตั้งค่าได้');
+                }
+            });
+        }
+
+        // Load settings for modal
+        async function loadSettingsForModal() {
+            try {
+                const res = await fetch(`${API_BASE}/settings.php`);
+                const data = await res.json();
+                if (data.success && data.data && data.data.settings) {
+                    const s = data.data.settings;
+                    document.getElementById('setting-store-name').value = s.store_name || '';
+                    document.getElementById('setting-store-address').value = s.store_address || '';
+                    document.getElementById('setting-receipt-footer').value = s.receipt_footer || '';
+                    document.getElementById('setting-welcome-message').value = s.welcome_message || '';
+                    document.getElementById('setting-quick-items-per-row').value = s.quick_items_per_row || '6';
+                    document.getElementById('setting-quick-items-count').value = s.quick_items_count || '30';
+                    document.getElementById('setting-quick-items-days').value = s.quick_items_days || '30';
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+    </script>
+</body>
+</html>

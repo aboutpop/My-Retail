@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - POS & Stock Retail Manager</title>
+    <link rel="stylesheet" href="css/fonts.css">
+    <link rel="stylesheet" href="assets/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-boxes-stacked fa-2x"></i>
+            <h2>POS & Stock Retail Manager</h2>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="has-branch">
+                <a href="index.html" class="active">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <ul class="branch-menu">
+                    <li><a href="#" id="btn-open-settings"><i class="fas fa-gear"></i><span>ตั้งค่าระบบ</span></a></li>
+                </ul>
+            </li>
+            <li><a href="pos.html"><i class="fas fa-cash-register"></i><span>POS (คิดบิลขาย)</span></a></li>
+            <li><a href="products.html"><i class="fas fa-box"></i><span>จัดการสินค้า</span></a></li>
+            <li><a href="categories.html"><i class="fas fa-tags"></i><span>จัดการหมวดหมู่</span></a></li>
+            <li><a href="sales.html"><i class="fas fa-receipt"></i><span>จัดการบิล</span></a></li>
+            <li><a href="stock.html"><i class="fas fa-warehouse"></i><span>การจัดการสต๊อก</span></a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-wrapper">
+        <!-- Topbar -->
+        <header class="topbar">
+            <h1><i class="fas fa-chart-line"></i> Dashboard</h1>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <span id="store-name" style="color: var(--text-muted); font-size: 0.9rem; font-weight: 500;"></span>
+                <span id="current-date" style="color: var(--text-muted); font-size: 0.9rem;"></span>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <main class="content-area">
+            <!-- Stats Cards (8 ช่อง) -->
+            <div class="stats-grid-8">
+                <!-- Row 1 -->
+                <div class="card">
+                    <div class="stat-card">
+                        <div class="stat-icon primary">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-total-products">0</h3>
+                            <p>สินค้าทั้งหมด</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="stat-card">
+                        <div class="stat-icon success">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-today-sales">฿0</h3>
+                            <p>ยอดขายวันนี้</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="stat-card">
+                        <div class="stat-icon warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-low-stock">0</h3>
+                            <p>สินค้าสต็อกต่ำ</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="stat-card">
+                        <div class="stat-icon info">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-today-bills">0</h3>
+                            <p>บิลวันนี้</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Row 2 (เพิ่มใหม่) -->
+                <div class="card">
+                    <div class="stat-card">
+                        <div class="stat-icon primary">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-weekly-bills">0</h3>
+                            <p>รายการขาย 7 วัน</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="stat-card">
+                        <div class="stat-icon success">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-monthly-sales">฿0</h3>
+                            <p>ยอดขายเดือนนี้</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="stat-card">
+                        <div class="stat-icon warning">
+                            <i class="fas fa-hand-holding-usd"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-monthly-profit">฿0</h3>
+                            <p>กำไรเดือนนี้</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="stat-card">
+                        <div class="stat-icon info">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="stat-total-inventory">฿0</h3>
+                            <p>มูลค่าสต็อกทั้งร้าน</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Chart with Period Filter -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-chart-line"></i> กราฟยอดขาย</h3>
+                    <div class="toolbar" style="margin-bottom: 0;">
+                        <select id="chart-period" class="form-control" style="max-width: 150px;">
+                            <option value="7days">7 วันล่าสุด</option>
+                            <option value="30days" selected>30 วันล่าสุด</option>
+                            <option value="custom">กำหนดเอง</option>
+                        </select>
+                        <div id="chart-date-range" style="display: none; gap: 0.5rem; align-items: center;">
+                            <label style="font-size: 0.85rem; color: var(--text-muted);">จาก</label>
+                            <input type="date" id="chart-date-from" class="form-control" style="max-width: 150px;">
+                            <label style="font-size: 0.85rem; color: var(--text-muted);">ถึง</label>
+                            <input type="date" id="chart-date-to" class="form-control" style="max-width: 150px;">
+                        </div>
+                        <button class="btn btn-primary btn-sm" id="btn-update-chart">
+                            <i class="fas fa-sync"></i> อัพเดท
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top Products & Top Profit Products -->
+            <div class="grid grid-cols-2">
+                <!-- Top Selling Products -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-trophy"></i> อันดับสินค้าขายดี (30 วัน)</h3>
+                    </div>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>อันดับ</th>
+                                    <th>สินค้า</th>
+                                    <th style="text-align: right;">จำนวนขาย</th>
+                                    <th style="text-align: right;">ยอดขาย</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-products-table">
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">กำลังโหลด...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Top Profit Products (ใหม่) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-gem"></i> สินค้ากำไรสูงสุด 10 อันดับ (เดือนนี้)</h3>
+                    </div>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>อันดับ</th>
+                                    <th>สินค้า</th>
+                                    <th style="text-align: right;">จำนวนขาย</th>
+                                    <th style="text-align: right;">กำไร</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-profit-table">
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">กำลังโหลด...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Sales -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-clock"></i> การขายล่าสุด</h3>
+                    <a href="sales.html" class="btn btn-outline btn-sm">
+                        <i class="fas fa-arrow-right"></i> ดูทั้งหมด
+                    </a>
+                </div>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>เลขบิล</th>
+                                <th>วันที่</th>
+                                <th style="text-align: right;">ยอดรวม</th>
+                                <th style="text-align: right;">ส่วนลด</th>
+                                <th style="text-align: right;">ยอดสุทธิ</th>
+                                <th>วิธีชำระ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-sales-table">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">กำลังโหลด...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-gear"></i> ตั้งค่าระบบ</h3>
+                <button class="modal-close" id="btn-close-settings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tab-group">
+                    <button class="tab-btn active settings-tab" data-tab="main">
+                        <i class="fas fa-store"></i> ข้อมูลร้าน
+                    </button>
+                    <button class="tab-btn settings-tab" data-tab="other">
+                        <i class="fas fa-sliders-h"></i> ตั้งค่าอื่นๆ
+                    </button>
+                </div>
+
+                <div id="tab-main" class="settings-content">
+                    <form id="form-main-settings">
+                        <div class="form-group">
+                            <label class="form-label">ชื่อร้าน <span style="color: var(--danger);">*</span></label>
+                            <input type="text" class="form-control" id="setting-store-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ที่อยู่ร้าน</label>
+                            <textarea class="form-control" id="setting-store-address" rows="2"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ข้อความท้ายใบเสร็จ</label>
+                            <input type="text" class="form-control" id="setting-receipt-footer">
+                        </div>
+                    </form>
+                </div>
+
+                <div id="tab-other" class="settings-content" style="display: none;">
+                    <form id="form-other-settings">
+                        <div class="form-group">
+                            <label class="form-label">ข้อความต้อนรับ</label>
+                            <input type="text" class="form-control" id="setting-welcome-message">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">จำนวนปุ่ม Quick Items ต่อแถว</label>
+                            <select class="form-control" id="setting-quick-items-per-row">
+                                <option value="5">5 ปุ่ม/แถว</option>
+                                <option value="6" selected>6 ปุ่ม/แถว</option>
+                                <option value="7">7 ปุ่ม/แถว</option>
+                                <option value="8">8 ปุ่ม/แถว</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">จำนวนสินค้าขายดีที่แสดง</label>
+                            <input type="number" class="form-control" id="setting-quick-items-count" min="10" max="100" value="30">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ระยะเวลาที่ย้อนดู (วัน)</label>
+                            <input type="number" class="form-control" id="setting-quick-items-days" min="7" max="365" value="30">
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="btn-cancel-settings">ยกเลิก</button>
+                <button class="btn btn-primary" id="btn-save-settings">
+                    <i class="fas fa-save"></i> บันทึกการตั้งค่า
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const API_BASE = '/api';
+        let salesChart = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            setCurrentDate();
+            await loadStoreName();
+            await loadStats();
+            await loadTopProducts();
+            await loadTopProfitProducts();
+            await loadRecentSales();
+            await loadSalesChart();
+            setupEventListeners();
+            
+            console.log('✅ Dashboard initialized');
+        });
+
+        function setCurrentDate() {
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            document.getElementById('current-date').textContent = now.toLocaleDateString('th-TH', options);
+        }
+
+        async function loadStoreName() {
+            try {
+                const res = await fetch(`${API_BASE}/settings.php?key=store_name`);
+                const data = await res.json();
+                if (data.success && data.data && data.data.settings) {
+                    const storeName = data.data.settings.store_name || 'ร้านค้า';
+                    document.getElementById('store-name').textContent = storeName;
+                    document.title = `Dashboard - ${storeName}`;
+                }
+            } catch (error) {
+                console.error('Error loading store name:', error);
+            }
+        }
+
+        async function loadStats() {
+            try {
+                // โหลดสินค้าทั้งหมด
+                const productsRes = await fetch(`${API_BASE}/products.php?limit=10000`);
+                const productsData = await productsRes.json();
+                
+                if (productsData.success && productsData.data && productsData.data.products) {
+                    const products = productsData.data.products;
+                    
+                    // 1. สินค้าทั้งหมด
+                    document.getElementById('stat-total-products').textContent = products.length.toLocaleString();
+                    
+                    // 2. สินค้าสต็อกต่ำ
+                    const lowStock = products.filter(p => parseInt(p.stock || 0) < 10 && parseInt(p.stock || 0) >= 0).length;
+                    document.getElementById('stat-low-stock').textContent = lowStock.toLocaleString();
+                    
+                    // 8. มูลค่าสต็อกทั้งร้าน (ราคาทุน × จำนวนสต็อก)
+                    const totalInventory = products.reduce((sum, p) => {
+                        return sum + (parseFloat(p.cost || 0) * parseInt(p.stock || 0));
+                    }, 0);
+                    document.getElementById('stat-total-inventory').textContent = `฿${totalInventory.toFixed(2)}`;
+                }
+
+                // ยอดขายวันนี้
+                const today = new Date().toISOString().split('T')[0];
+                const todayRes = await fetch(`${API_BASE}/sales.php?date_from=${today}&date_to=${today}`);
+                const todayData = await todayRes.json();
+                
+                if (todayData.success && todayData.data && todayData.data.summary) {
+                    const summary = todayData.data.summary;
+                    document.getElementById('stat-today-sales').textContent = `฿${(summary.total_net || 0).toFixed(2)}`;
+                    document.getElementById('stat-today-bills').textContent = summary.bill_count || 0;
+                }
+
+                // 5. รายการขาย 7 วัน
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+                const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+                
+                const weeklyRes = await fetch(`${API_BASE}/sales.php?date_from=${sevenDaysAgoStr}&date_to=${today}`);
+                const weeklyData = await weeklyRes.json();
+                
+                if (weeklyData.success && weeklyData.data && weeklyData.data.summary) {
+                    document.getElementById('stat-weekly-bills').textContent = weeklyData.data.summary.bill_count || 0;
+                }
+
+                // 6. ยอดขายเดือนนี้ + 7. กำไรเดือนนี้
+                const firstDayOfMonth = new Date();
+                firstDayOfMonth.setDate(1);
+                const firstDayStr = firstDayOfMonth.toISOString().split('T')[0];
+                
+                const monthlyRes = await fetch(`${API_BASE}/sales.php?date_from=${firstDayStr}&date_to=${today}`);
+                const monthlyData = await monthlyRes.json();
+                
+                if (monthlyData.success && monthlyData.data && monthlyData.data.summary) {
+                    const summary = monthlyData.data.summary;
+                    document.getElementById('stat-monthly-sales').textContent = `฿${(summary.total_net || 0).toFixed(2)}`;
+                    document.getElementById('stat-monthly-profit').textContent = `฿${(summary.total_profit || 0).toFixed(2)}`;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadTopProducts() {
+            try {
+                const res = await fetch(`${API_BASE}/products.php?top_selling=10&days=30`);
+                const data = await res.json();
+                
+                if (data.success && data.data && data.data.products) {
+                    const products = data.data.products;
+                    const tbody = document.getElementById('top-products-table');
+                    
+                    if (products.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">ยังไม่มีข้อมูลการขาย</td></tr>';
+                        return;
+                    }
+                    
+                    tbody.innerHTML = products.slice(0, 10).map((p, index) => `
+                        <tr>
+                            <td><strong>#${index + 1}</strong></td>
+                            <td>${p.name}</td>
+                            <td style="text-align: right;">${p.total_sold || 0}</td>
+                            <td style="text-align: right;">฿${((p.total_sold || 0) * parseFloat(p.price)).toFixed(2)}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading top products:', error);
+            }
+        }
+
+        async function loadTopProfitProducts() {
+            try {
+                // คำนวณกำไรจาก sale_items + products ในช่วงเดือนนี้
+                const firstDayOfMonth = new Date();
+                firstDayOfMonth.setDate(1);
+                const firstDayStr = firstDayOfMonth.toISOString().split('T')[0];
+                const today = new Date().toISOString().split('T')[0];
+                
+                // ดึงข้อมูลสินค้าทั้งหมดก่อน
+                const productsRes = await fetch(`${API_BASE}/products.php?limit=10000`);
+                const productsData = await productsRes.json();
+                
+                if (!productsData.success || !productsData.data || !productsData.data.products) {
+                    return;
+                }
+                
+                const products = productsData.data.products;
+                const productMap = {};
+                products.forEach(p => {
+                    productMap[p.id] = {
+                        name: p.name,
+                        cost: parseFloat(p.cost || 0),
+                        price: parseFloat(p.price || 0)
+                    };
+                });
+                
+                // ดึง sale_items ในช่วงเดือนนี้
+                // เราต้องดึง sales ก่อน แล้วค่อยดึง sale_items
+                const salesRes = await fetch(`${API_BASE}/sales.php?date_from=${firstDayStr}&date_to=${today}&limit=10000`);
+                const salesData = await salesRes.json();
+                
+                if (!salesData.success || !salesData.data || !salesData.data.sales) {
+                    document.getElementById('top-profit-table').innerHTML = 
+                        '<tr><td colspan="4" class="text-center text-muted">ยังไม่มีข้อมูลการขาย</td></tr>';
+                    return;
+                }
+                
+                const sales = salesData.data.sales;
+                const profitByProduct = {};
+                
+                // ดึง sale_items ของแต่ละบิล
+                for (const sale of sales) {
+                    const detailRes = await fetch(`${API_BASE}/sales.php?id=${sale.id}`);
+                    const detailData = await detailRes.json();
+                    
+                    if (detailData.success && detailData.data && detailData.data.items) {
+                        for (const item of detailData.data.items) {
+                            const productId = item.product_id;
+                            const quantity = parseFloat(item.quantity || 0);
+                            const price = parseFloat(item.price_snapshot || 0);
+                            const cost = parseFloat(item.cost_snapshot || 0);
+                            const profit = (price - cost) * quantity;
+                            
+                            if (!profitByProduct[productId]) {
+                                profitByProduct[productId] = {
+                                    name: item.product_name_snapshot || productMap[productId]?.name || 'ไม่ทราบ',
+                                    quantity: 0,
+                                    profit: 0
+                                };
+                            }
+                            
+                            profitByProduct[productId].quantity += quantity;
+                            profitByProduct[productId].profit += profit;
+                        }
+                    }
+                }
+                
+                // เรียงลำดับตามกำไร
+                const sorted = Object.entries(profitByProduct)
+                    .map(([id, data]) => ({ id, ...data }))
+                    .sort((a, b) => b.profit - a.profit)
+                    .slice(0, 10);
+                
+                const tbody = document.getElementById('top-profit-table');
+                
+                if (sorted.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">ยังไม่มีข้อมูลกำไร</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = sorted.map((p, index) => `
+                    <tr>
+                        <td><strong>#${index + 1}</strong></td>
+                        <td>${p.name}</td>
+                        <td style="text-align: right;">${p.quantity.toFixed(0)}</td>
+                        <td style="text-align: right; color: var(--success); font-weight: bold;">฿${p.profit.toFixed(2)}</td>
+                    </tr>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading top profit products:', error);
+                document.getElementById('top-profit-table').innerHTML = 
+                    '<tr><td colspan="4" class="text-center text-danger">เกิดข้อผิดพลาด</td></tr>';
+            }
+        }
+
+        async function loadRecentSales() {
+            try {
+                const res = await fetch(`${API_BASE}/sales.php?limit=5`);
+                const data = await res.json();
+                
+                if (data.success && data.data && data.data.sales) {
+                    const sales = data.data.sales;
+                    const tbody = document.getElementById('recent-sales-table');
+                    
+                    if (sales.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">ยังไม่มีข้อมูลการขาย</td></tr>';
+                        return;
+                    }
+                    
+                    const paymentMethods = {
+                        'cash': 'เงินสด',
+                        'transfer': 'โอนเงิน',
+                        'other': 'อื่นๆ'
+                    };
+                    
+                    tbody.innerHTML = sales.map(sale => {
+                        const date = new Date(sale.sale_date).toLocaleString('th-TH', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                        
+                        return `
+                            <tr>
+                                <td><strong>${sale.bill_no}</strong></td>
+                                <td>${date}</td>
+                                <td style="text-align: right;">฿${parseFloat(sale.total_amount).toFixed(2)}</td>
+                                <td style="text-align: right;">฿${parseFloat(sale.discount).toFixed(2)}</td>
+                                <td style="text-align: right; font-weight: bold;">฿${parseFloat(sale.net_total).toFixed(2)}</td>
+                                <td>${paymentMethods[sale.payment_method] || sale.payment_method}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            } catch (error) {
+                console.error('Error loading recent sales:', error);
+            }
+        }
+
+        async function loadSalesChart() {
+            try {
+                const period = document.getElementById('chart-period').value;
+                const today = new Date();
+                let startDate, endDate;
+                
+                if (period === 'custom') {
+                    startDate = new Date(document.getElementById('chart-date-from').value);
+                    endDate = new Date(document.getElementById('chart-date-to').value);
+                } else if (period === '7days') {
+                    endDate = today;
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - 6);
+                } else { // 30days
+                    endDate = today;
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - 29);
+                }
+                
+                const labels = [];
+                const salesData = [];
+                const profitData = [];
+                
+                const currentDate = new Date(startDate);
+                while (currentDate <= endDate) {
+                    const dateStr = currentDate.toISOString().split('T')[0];
+                    labels.push(currentDate.toLocaleDateString('th-TH', { day: '2-digit', month: 'short' }));
+                    
+                    const res = await fetch(`${API_BASE}/sales.php?date_from=${dateStr}&date_to=${dateStr}`);
+                    const result = await res.json();
+                    
+                    if (result.success && result.data && result.data.summary) {
+                        salesData.push(result.data.summary.total_net || 0);
+                        profitData.push(result.data.summary.total_profit || 0);
+                    } else {
+                        salesData.push(0);
+                        profitData.push(0);
+                    }
+                    
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                
+                const ctx = document.getElementById('salesChart').getContext('2d');
+                
+                if (salesChart) {
+                    salesChart.destroy();
+                }
+                
+                salesChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'ยอดขาย',
+                                data: salesData,
+                                borderColor: 'rgb(37, 99, 235)',
+                                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                                tension: 0.4,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'กำไร',
+                                data: profitData,
+                                borderColor: 'rgb(16, 185, 129)',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                tension: 0.4,
+                                yAxisID: 'y'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '฿' + value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading sales chart:', error);
+            }
+        }
+
+        function setupEventListeners() {
+            // Chart period filter
+            document.getElementById('chart-period').addEventListener('change', (e) => {
+                const dateRange = document.getElementById('chart-date-range');
+                if (e.target.value === 'custom') {
+                    dateRange.style.display = 'flex';
+                } else {
+                    dateRange.style.display = 'none';
+                    loadSalesChart();
+                }
+            });
+            
+            document.getElementById('btn-update-chart').addEventListener('click', loadSalesChart);
+            
+            // Settings modal
+            const settingsModal = document.getElementById('settings-modal');
+            const btnOpenSettings = document.getElementById('btn-open-settings');
+            const btnCloseSettings = document.getElementById('btn-close-settings');
+            const btnCancelSettings = document.getElementById('btn-cancel-settings');
+            const btnSaveSettings = document.getElementById('btn-save-settings');
+            const settingsTabs = document.querySelectorAll('.settings-tab');
+            const settingsContents = document.querySelectorAll('.settings-content');
+
+            btnOpenSettings.addEventListener('click', async (e) => {
+                e.preventDefault();
+                settingsModal.style.display = 'flex';
+                await loadSettings();
+            });
+
+            btnCloseSettings.addEventListener('click', () => settingsModal.style.display = 'none');
+            btnCancelSettings.addEventListener('click', () => settingsModal.style.display = 'none');
+            settingsModal.addEventListener('click', (e) => {
+                if (e.target === settingsModal) settingsModal.style.display = 'none';
+            });
+
+            settingsTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.dataset.tab;
+                    settingsTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    settingsContents.forEach(c => c.style.display = 'none');
+                    document.getElementById(`tab-${tabName}`).style.display = 'block';
+                });
+            });
+
+            btnSaveSettings.addEventListener('click', async () => {
+                const newSettings = {
+                    store_name: document.getElementById('setting-store-name').value,
+                    store_address: document.getElementById('setting-store-address').value,
+                    receipt_footer: document.getElementById('setting-receipt-footer').value,
+                    welcome_message: document.getElementById('setting-welcome-message').value,
+                    quick_items_per_row: document.getElementById('setting-quick-items-per-row').value,
+                    quick_items_count: document.getElementById('setting-quick-items-count').value,
+                    quick_items_days: document.getElementById('setting-quick-items-days').value
+                };
+
+                try {
+                    const res = await fetch(`${API_BASE}/settings.php`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ settings: newSettings })
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        alert('บันทึกการตั้งค่าสำเร็จ');
+                        settingsModal.style.display = 'none';
+                        await loadStoreName();
+                    } else {
+                        alert('เกิดข้อผิดพลาด: ' + data.message);
+                    }
+                } catch (error) {
+                    console.error('Error saving settings:', error);
+                    alert('ไม่สามารถบันทึกการตั้งค่าได้');
+                }
+            });
+        }
+
+        async function loadSettings() {
+            try {
+                const res = await fetch(`${API_BASE}/settings.php`);
+                const data = await res.json();
+                if (data.success && data.data && data.data.settings) {
+                    const s = data.data.settings;
+                    document.getElementById('setting-store-name').value = s.store_name || '';
+                    document.getElementById('setting-store-address').value = s.store_address || '';
+                    document.getElementById('setting-receipt-footer').value = s.receipt_footer || '';
+                    document.getElementById('setting-welcome-message').value = s.welcome_message || '';
+                    document.getElementById('setting-quick-items-per-row').value = s.quick_items_per_row || '6';
+                    document.getElementById('setting-quick-items-count').value = s.quick_items_count || '30';
+                    document.getElementById('setting-quick-items-days').value = s.quick_items_days || '30';
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+    </script>
+</body>
+</html>

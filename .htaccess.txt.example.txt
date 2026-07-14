@@ -1,0 +1,24 @@
+# ============================================================
+# My Retail - Environment Variables Template
+# ============================================================
+# Copy ไฟล์นี้เป็น .htaccess.txt แล้วแก้ไขค่าให้ถูกต้อง
+# อย่า commit .htaccess.txt ที่มีค่าจริงขึ้น GitHub!
+
+# Database Configuration (Neon.tech PostgreSQL)
+SetEnv PGHOST "your-project-id.ap-southeast-1.aws.neon.tech"
+SetEnv PGPORT "5432"
+SetEnv PGDATABASE "neondb"
+SetEnv PGUSER "neondb_owner"
+SetEnv PGPASSWORD "your-secure-password-here"
+
+# Application Environment
+SetEnv APP_ENV "development"
+
+# Optional: Debug Mode
+SetEnv DEBUG "true"
+
+# Optional: API Rate Limiting
+SetEnv RATE_LIMIT "100"
+
+# Optional: CORS Allowed Origins
+SetEnv CORS_ORIGINS "http://localhost,https://yourdomain.com"
