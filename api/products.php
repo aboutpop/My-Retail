@@ -1,9 +1,9 @@
 <?php
 /**
- * Products API - จัดการข้อมูลสินค้า (CRUD)
- * Endpoint: /api/products.php
- * Version: 1.7 (PostgreSQL + no_stock_count - Fixed for integer type)
- */
+* Products API - จัดการข้อมูลสินค้า (CRUD)
+* Endpoint: /api/products.php
+* Version: 2.0 (Added caching system)
+*/
 
 require_once 'config.php';
 
@@ -34,8 +34,8 @@ switch ($method) {
 }
 
 /**
- * Helper: แปลงค่าว่างเป็น 0
- */
+* Helper: แปลงค่าว่างเป็น 0
+*/
 function convertEmptyToZero($value) {
     if ($value === '' || $value === null) {
         return 0;
@@ -44,8 +44,8 @@ function convertEmptyToZero($value) {
 }
 
 /**
- * Helper: แปลงค่า boolean
- */
+* Helper: แปลงค่า boolean
+*/
 function convertToBoolean($value) {
     if ($value === 'true' || $value === true || $value === 1 || $value === '1') {
         return true;
@@ -54,37 +54,54 @@ function convertToBoolean($value) {
 }
 
 /**
- * GET: ดึงสินค้าขายดี (Top Selling Products)
- */
+* GET: ดึงสินค้าขายดี (Top Selling Products)
+*/
 function handleTopSelling() {
     global $pdo;
-    
     $limit = isset($_GET['top_selling']) ? intval($_GET['top_selling']) : 30;
     $days = isset($_GET['days']) ? intval($_GET['days']) : 30;
     
+    // Cache key includes limit and days
+    $cacheKey = "products:top_selling:{$limit}:{$days}";
+    
+    // Try to get from cache
+    $products = cache_get($cacheKey);
+    
+    if ($products !== false) {
+        sendResponse('success', [
+            'products' => $products,
+            'total' => count($products),
+            'days' => $days,
+            'limit' => $limit,
+            'cached' => true
+        ], 'Success');
+        return;
+    }
+    
+    // Cache miss - query from database
     try {
         $sql = "
-            SELECT 
-                p.id,
-                p.name,
-                p.barcode,
-                p.price,
-                p.cost,
-                p.stock,
-                p.category_id,
-                p.no_stock_count,
-                c.name as category_name,
-                COALESCE(SUM(si.quantity), 0) as total_sold,
-                COUNT(DISTINCT si.sale_id) as times_sold
-            FROM products p
-            LEFT JOIN sale_items si ON p.id = si.product_id
-            LEFT JOIN sales s ON si.sale_id = s.id
-            LEFT JOIN categories c ON p.category_id = c.id
-            WHERE s.sale_date >= NOW() - (:days * INTERVAL '1 day')
-               OR s.sale_date IS NULL
-            GROUP BY p.id, p.name, p.barcode, p.price, p.cost, p.stock, p.category_id, p.no_stock_count, c.name
-            ORDER BY times_sold DESC, total_sold DESC
-            LIMIT :limit
+        SELECT
+            p.id,
+            p.name,
+            p.barcode,
+            p.price,
+            p.cost,
+            p.stock,
+            p.category_id,
+            p.no_stock_count,
+            c.name as category_name,
+            COALESCE(SUM(si.quantity), 0) as total_sold,
+            COUNT(DISTINCT si.sale_id) as times_sold
+        FROM products p
+        LEFT JOIN sale_items si ON p.id = si.product_id
+        LEFT JOIN sales s ON si.sale_id = s.id
+        LEFT JOIN categories c ON p.category_id = c.id
+        WHERE s.sale_date >= NOW() - (:days * INTERVAL '1 day')
+            OR s.sale_date IS NULL
+        GROUP BY p.id, p.name, p.barcode, p.price, p.cost, p.stock, p.category_id, p.no_stock_count, c.name
+        ORDER BY times_sold DESC, total_sold DESC
+        LIMIT :limit
         ";
         
         $stmt = $pdo->prepare($sql);
@@ -109,11 +126,15 @@ function handleTopSelling() {
             ];
         }
         
+        // Save to cache (5 minutes)
+        cache_set($cacheKey, $products, 300);
+        
         sendResponse('success', [
             'products' => $products,
             'total' => count($products),
             'days' => $days,
-            'limit' => $limit
+            'limit' => $limit,
+            'cached' => false
         ], 'Success');
         
     } catch (PDOException $e) {
@@ -124,11 +145,10 @@ function handleTopSelling() {
 }
 
 /**
- * GET: ดึงสินค้าชิ้นเดียวตาม ID
- */
+* GET: ดึงสินค้าชิ้นเดียวตาม ID
+*/
 function getProductById() {
     global $pdo;
-    
     $id = intval($_GET['id']);
     
     if ($id <= 0) {
@@ -138,11 +158,11 @@ function getProductById() {
     }
     
     try {
-        $sql = "SELECT 
-                    p.id, p.name, p.barcode_status, p.barcode,
-                    p.price, p.cost, p.stock, p.unit,
-                    p.category, p.category_id, p.no_stock_count,
-                    c.name as category_name, p.created_at
+        $sql = "SELECT
+                p.id, p.name, p.barcode_status, p.barcode,
+                p.price, p.cost, p.stock, p.unit,
+                p.category, p.category_id, p.no_stock_count,
+                c.name as category_name, p.created_at
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.id
                 WHERE p.id = :id
@@ -177,15 +197,27 @@ function getProductById() {
 }
 
 /**
- * GET: ดึงรายการสินค้า
- */
+* GET: ดึงรายการสินค้า
+*/
 function getProducts() {
     global $pdo;
-    
     $search = isset($_GET['search']) ? $_GET['search'] : '';
     $category_id = isset($_GET['category_id']) ? intval($_GET['category_id']) : 0;
     $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 100;
     $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
+    
+    // Only cache if no search and no category filter
+    $useCache = empty($search) && $category_id === 0;
+    $cacheKey = "products:list:{$limit}:{$offset}";
+    
+    if ($useCache) {
+        $result = cache_get($cacheKey);
+        
+        if ($result !== false) {
+            sendResponse('success', array_merge($result, ['cached' => true]), 'Success');
+            return;
+        }
+    }
     
     try {
         $where = [];
@@ -204,20 +236,20 @@ function getProducts() {
         
         $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
         
-        $sql = "SELECT 
-                    p.id,
-                    p.name,
-                    p.barcode_status,
-                    p.barcode,
-                    p.price,
-                    p.cost,
-                    p.stock,
-                    p.unit,
-                    p.category,
-                    p.category_id,
-                    p.no_stock_count,
-                    c.name as category_name,
-                    p.created_at
+        $sql = "SELECT
+                p.id,
+                p.name,
+                p.barcode_status,
+                p.barcode,
+                p.price,
+                p.cost,
+                p.stock,
+                p.unit,
+                p.category,
+                p.category_id,
+                p.no_stock_count,
+                c.name as category_name,
+                p.created_at
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.id
                 {$whereClause}
@@ -229,9 +261,9 @@ function getProducts() {
         foreach ($params as $key => $value) {
             $stmt->bindValue($key, $value);
         }
+        
         $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue('offset', $offset, PDO::PARAM_INT);
-        
         $stmt->execute();
         
         $products = [];
@@ -246,18 +278,27 @@ function getProducts() {
         
         $countSql = "SELECT COUNT(*) as total FROM products p {$whereClause}";
         $countStmt = $pdo->prepare($countSql);
+        
         foreach ($params as $key => $value) {
             $countStmt->bindValue($key, $value);
         }
+        
         $countStmt->execute();
         $total = $countStmt->fetch()['total'];
         
-        sendResponse('success', [
+        $result = [
             'products' => $products,
             'total' => (int)$total,
             'limit' => $limit,
             'offset' => $offset
-        ], 'Success');
+        ];
+        
+        // Save to cache if no filters (5 minutes)
+        if ($useCache) {
+            cache_set($cacheKey, $result, 300);
+        }
+        
+        sendResponse('success', array_merge($result, ['cached' => false]), 'Success');
         
     } catch (PDOException $e) {
         logError('getProducts failed', ['error' => $e->getMessage()]);
@@ -267,11 +308,10 @@ function getProducts() {
 }
 
 /**
- * POST: เพิ่มสินค้าใหม่
- */
+* POST: เพิ่มสินค้าใหม่
+*/
 function createProduct() {
     global $pdo;
-    
     $data = getJSONInput();
     
     if (!$data) {
@@ -335,8 +375,10 @@ function createProduct() {
         $selectStmt = $pdo->prepare("SELECT * FROM products WHERE id = :id");
         $selectStmt->execute(['id' => $newId]);
         $product = $selectStmt->fetch();
-        
         $product['no_stock_count'] = ($product['no_stock_count'] > 0);
+        
+        // Clear all product caches
+        clearProductCaches();
         
         sendResponse('success', $product, 'Product created successfully');
         http_response_code(201);
@@ -349,11 +391,10 @@ function createProduct() {
 }
 
 /**
- * PUT: แก้ไขสินค้า
- */
+* PUT: แก้ไขสินค้า
+*/
 function updateProduct() {
     global $pdo;
-    
     $data = getJSONInput();
     
     if (!$data || empty($data['id'])) {
@@ -393,18 +434,22 @@ function updateProduct() {
             $updates[] = "name = :name";
             $params['name'] = $data['name'];
         }
+        
         if (isset($data['barcode_status'])) {
             $updates[] = "barcode_status = :barcode_status";
             $params['barcode_status'] = intval($data['barcode_status']);
         }
+        
         if (isset($data['barcode'])) {
             $updates[] = "barcode = :barcode";
             $params['barcode'] = $data['barcode'];
         }
+        
         if (isset($data['price'])) {
             $updates[] = "price = :price";
             $params['price'] = convertEmptyToZero($data['price']);
         }
+        
         if (isset($data['cost'])) {
             $updates[] = "cost = :cost";
             $params['cost'] = convertEmptyToZero($data['cost']);
@@ -431,10 +476,12 @@ function updateProduct() {
             $updates[] = "unit = :unit";
             $params['unit'] = $data['unit'];
         }
+        
         if (isset($data['category'])) {
             $updates[] = "category = :category";
             $params['category'] = $data['category'];
         }
+        
         if (isset($data['category_id'])) {
             $updates[] = "category_id = :category_id";
             $params['category_id'] = !empty($data['category_id']) ? intval($data['category_id']) : null;
@@ -458,8 +505,10 @@ function updateProduct() {
         $selectStmt = $pdo->prepare("SELECT * FROM products WHERE id = :id");
         $selectStmt->execute(['id' => $id]);
         $product = $selectStmt->fetch();
-        
         $product['no_stock_count'] = ($product['no_stock_count'] > 0);
+        
+        // Clear all product caches
+        clearProductCaches();
         
         sendResponse('success', $product, 'Product updated successfully');
         
@@ -471,11 +520,10 @@ function updateProduct() {
 }
 
 /**
- * DELETE: ลบสินค้า
- */
+* DELETE: ลบสินค้า
+*/
 function deleteProduct() {
     global $pdo;
-    
     $data = getJSONInput();
     
     if (!$data || empty($data['id'])) {
@@ -504,6 +552,9 @@ function deleteProduct() {
         $deleteStmt = $pdo->prepare("DELETE FROM products WHERE id = :id");
         $deleteStmt->execute(['id' => $id]);
         
+        // Clear all product caches
+        clearProductCaches();
+        
         sendResponse('success', [
             'id' => $id,
             'name' => $product['name']
@@ -513,6 +564,32 @@ function deleteProduct() {
         logError('deleteProduct failed', ['error' => $e->getMessage()]);
         sendResponse('error', [], 'Failed to delete product: ' . $e->getMessage());
         http_response_code(500);
+    }
+}
+
+/**
+* Helper: Clear all product-related caches
+*/
+function clearProductCaches() {
+    // Clear main product list cache
+    cache_delete('products:list:100:0');
+    
+    // Clear top selling caches (common limits)
+    for ($limit = 10; $limit <= 50; $limit += 10) {
+        for ($days = 7; $days <= 90; $days += 7) {
+            cache_delete("products:top_selling:{$limit}:{$days}");
+        }
+    }
+    
+    // Also clear with glob pattern (for any other cached combinations)
+    $cacheDir = CACHE_DIR;
+    if (is_dir($cacheDir)) {
+        $files = glob($cacheDir . 'products*.cache');
+        foreach ($files as $file) {
+            if (is_file($file)) {
+                unlink($file);
+            }
+        }
     }
 }
 ?>
