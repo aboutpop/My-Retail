@@ -1,9 +1,9 @@
 <?php
 /**
- * Categories API - จัดการหมวดหมู่สินค้า (CRUD + Reorder)
- * Endpoint: /api/categories.php
- * Version: 1.5 (PostgreSQL + sort_order)
- */
+* Categories API - จัดการหมวดหมู่สินค้า (CRUD + Reorder)
+* Endpoint: /api/categories.php
+* Version: 2.0 (Added caching system)
+*/
 
 require_once 'config.php';
 
@@ -33,22 +33,38 @@ switch ($method) {
 }
 
 /**
- * GET: ดึงรายการหมวดหมู่ (เรียงตาม sort_order)
- */
+* GET: ดึงรายการหมวดหมู่ (เรียงตาม sort_order)
+*/
 function getCategories() {
     global $pdo;
-    
     $includeCount = isset($_GET['include_count']) && $_GET['include_count'] === 'true';
     
+    // Use different cache key based on include_count parameter
+    $cacheKey = $includeCount ? 'categories:with_count' : 'categories:all';
+    
+    // Try to get from cache first
+    $categories = cache_get($cacheKey);
+    
+    if ($categories !== false) {
+        // Cache hit
+        sendResponse('success', [
+            'categories' => $categories,
+            'total' => count($categories),
+            'cached' => true
+        ], 'Success');
+        return;
+    }
+    
+    // Cache miss - query from database
     try {
         if ($includeCount) {
-            $sql = "SELECT 
-                        c.id,
-                        c.name,
-                        c.description,
-                        c.sort_order,
-                        c.created_at,
-                        COUNT(p.id) as product_count
+            $sql = "SELECT
+                    c.id,
+                    c.name,
+                    c.description,
+                    c.sort_order,
+                    c.created_at,
+                    COUNT(p.id) as product_count
                     FROM categories c
                     LEFT JOIN products p ON c.id = p.category_id
                     GROUP BY c.id, c.name, c.description, c.sort_order, c.created_at
@@ -71,9 +87,13 @@ function getCategories() {
             }
         }
         
+        // Save to cache (10 minutes)
+        cache_set($cacheKey, $categories, 600);
+        
         sendResponse('success', [
             'categories' => $categories,
-            'total' => count($categories)
+            'total' => count($categories),
+            'cached' => false
         ], 'Success');
         
     } catch (PDOException $e) {
@@ -84,11 +104,10 @@ function getCategories() {
 }
 
 /**
- * POST: เพิ่มหมวดหมู่ใหม่
- */
+* POST: เพิ่มหมวดหมู่ใหม่
+*/
 function createCategory() {
     global $pdo;
-    
     $data = getJSONInput();
     
     if (!$data) {
@@ -115,7 +134,7 @@ function createCategory() {
             return;
         }
         
-        // 🆕 หา sort_order สุดท้าย (ถ้าไม่ได้ส่งมา)
+        // หา sort_order สุดท้าย (ถ้าไม่ได้ส่งมา)
         $sortOrder = isset($data['sort_order']) ? intval($data['sort_order']) : null;
         
         if ($sortOrder === null) {
@@ -126,8 +145,8 @@ function createCategory() {
         }
         
         // เพิ่มหมวดหมู่ใหม่
-        $sql = "INSERT INTO categories (name, description, sort_order) 
-                VALUES (:name, :description, :sort_order) 
+        $sql = "INSERT INTO categories (name, description, sort_order)
+                VALUES (:name, :description, :sort_order)
                 RETURNING id";
         
         $stmt = $pdo->prepare($sql);
@@ -146,6 +165,10 @@ function createCategory() {
         $category = $selectStmt->fetch();
         $category['sort_order'] = intval($category['sort_order']);
         
+        // Clear cache
+        cache_delete('categories:all');
+        cache_delete('categories:with_count');
+        
         sendResponse('success', $category, 'Category created successfully');
         http_response_code(201);
         
@@ -157,11 +180,10 @@ function createCategory() {
 }
 
 /**
- * PUT: แก้ไขหมวดหมู่
- */
+* PUT: แก้ไขหมวดหมู่
+*/
 function updateCategory() {
     global $pdo;
-    
     $data = getJSONInput();
     
     if (!$data) {
@@ -213,7 +235,6 @@ function updateCategory() {
             $params['description'] = $data['description'];
         }
         
-        // 🆕 อัปเดต sort_order
         if (isset($data['sort_order'])) {
             $updates[] = "sort_order = :sort_order";
             $params['sort_order'] = intval($data['sort_order']);
@@ -235,6 +256,10 @@ function updateCategory() {
         $category = $selectStmt->fetch();
         $category['sort_order'] = intval($category['sort_order']);
         
+        // Clear cache
+        cache_delete('categories:all');
+        cache_delete('categories:with_count');
+        
         sendResponse('success', $category, 'Category updated successfully');
         
     } catch (PDOException $e) {
@@ -245,11 +270,10 @@ function updateCategory() {
 }
 
 /**
- * DELETE: ลบหมวดหมู่
- */
+* DELETE: ลบหมวดหมู่
+*/
 function deleteCategory() {
     global $pdo;
-    
     $data = getJSONInput();
     $id = isset($_GET['id']) ? intval($_GET['id']) : (isset($data['id']) ? intval($data['id']) : 0);
     
@@ -284,6 +308,10 @@ function deleteCategory() {
         $deleteStmt = $pdo->prepare("DELETE FROM categories WHERE id = :id");
         $deleteStmt->execute(['id' => $id]);
         
+        // Clear cache
+        cache_delete('categories:all');
+        cache_delete('categories:with_count');
+        
         sendResponse('success', [
             'id' => $id,
             'name' => $category['name']
@@ -297,19 +325,10 @@ function deleteCategory() {
 }
 
 /**
- * 🆕 POST: สลับลำดับหมวดหมู่
- * 
- * Request body:
- * {
- *   "id1": 8,
- *   "id2": 9
- * }
- * 
- * จะสลับ sort_order ของ id1 กับ id2
- */
+* POST: สลับลำดับหมวดหมู่
+*/
 function reorderCategories() {
     global $pdo;
-    
     $data = getJSONInput();
     
     if (!isset($data['id1']) || !isset($data['id2'])) {
@@ -358,6 +377,10 @@ function reorderCategories() {
         $update2->execute(['sort' => $sort1, 'id' => $id2]);
         
         $pdo->commit();
+        
+        // Clear cache
+        cache_delete('categories:all');
+        cache_delete('categories:with_count');
         
         sendResponse('success', [
             'id1' => $id1,

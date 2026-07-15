@@ -315,7 +315,7 @@
     </div>
 
     <script>
-        const API_BASE = '/api';
+        const API_BASE = window.location.pathname.includes('/myproject/') ? '/myproject/My-Retail/api' : '/api';
         
         // Thai to Number Mapping
         const THAI_TO_NUMBER = {

@@ -1,87 +1,57 @@
-# ============================================================
-# Environment Variables & Credentials
-# ============================================================
+# ================================================================================
+# MY RETAIL - Git Ignore Rules
+# ================================================================================
+
+# Environment files (NEVER commit credentials)
 .env
 .env.local
 .env.production
-*.env
 
-# Apache configuration with credentials
-.htaccess.txt
-.htpasswd
+# Password files (local only)
+passwords.txt
+*.password
 
-# ============================================================
-# Configuration Files with Credentials
-# ============================================================
-config.local.php
-api/config.local.php
-config.production.php
-*.secret.php
-
-# ============================================================
-# Log Files
-# ============================================================
-logs/
-*.log
-api/logs/
-error.log
-debug.log
-
-# ============================================================
-# Backup Files (ไม่รวม schema files ที่ควร commit)
-# ============================================================
-backups/
-*.bak
-*.backup
-database/backups/
-*.dump
-*.pgdump
-
-# ============================================================
-# Cache Files
-# ============================================================
-cache/
-*.cache
+# Cache files
 api/cache/
+*.cache
 
-# ============================================================
-# IDE & Editor Files
-# ============================================================
+# Log files
+*.log
+logs/
+
+# IDE and editor files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-
-# ============================================================
-# OS Files
-# ============================================================
 .DS_Store
 Thumbs.db
+
+# OS files
 desktop.ini
+.DS_Store
+Thumbs.db
 
-# ============================================================
-# Node.js
-# ============================================================
+# Backup files
+*.bak
+*.backup
+*.sql.bak
+
+# Node modules (ถ้ามี)
 node_modules/
-package-lock.json
-yarn.lock
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# ============================================================
-# Composer
-# ============================================================
-vendor/
-composer.lock
-
-# ============================================================
-# Temporary Files
-# ============================================================
+# Temporary files
 *.tmp
 *.temp
-upload_temp/
+.cache/
 
-# ============================================================
-# Upload Files
-# ============================================================
+# Upload files
 uploads/
-assets/uploads/
+temp/
+/backup_html
+api/test_connection.php
+.htaccess.txt

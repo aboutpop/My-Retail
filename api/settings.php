@@ -1,31 +1,29 @@
 <?php
 /**
- * Settings API
- * จัดการค่าตั้งค่าระบบ (Store info, Receipt, UI settings)
- * Version: 1.5 (PostgreSQL - Fixed for new schema)
- *
- * Methods:
- * - GET: ดึง settings ทั้งหมด หรือ ดึงเฉพาะ key
- * - PUT: อัปเดต settings (multiple keys)
- *
- * Response Format:
- * {
- *   "status": "success",
- *   "message": "...",
- *   "data": {
- *     "settings": { "key1": "value1", "key2": "value2" }
- *   }
- * }
- *
- * ⚠️ Schema Update (2025):
- * - เปลี่ยนชื่อ column จาก setting_key → key
- * - เปลี่ยนชื่อ column จาก setting_value → value
- */
+* Settings API
+* จัดการค่าตั้งค่าระบบ (Store info, Receipt, UI settings)
+* Version: 2.0 (Added caching system)
+*
+* Methods:
+* - GET: ดึง settings ทั้งหมด หรือ ดึงเฉพาะ key
+* - PUT: อัปเดต settings (multiple keys)
+*
+* Response Format:
+* {
+*   "status": "success",
+*   "message": "...",
+*   "data": {
+*     "settings": { "key1": "value1", "key2": "value2" }
+*   }
+* }
+*
+* ⚠️ Schema Update (2025):
+* - เปลี่ยนชื่อ column จาก setting_key → key
+* - เปลี่ยนชื่อ column จาก setting_value → value
+*/
 
-// Include database connection & helper functions
 require_once 'config.php';
 
-// Get request method
 $method = $_SERVER['REQUEST_METHOD'];
 
 try {
@@ -47,19 +45,18 @@ try {
 }
 
 /**
- * GET: ดึงค่าตั้งค่า
- *
- * Parameters:
- * - key (optional): ถ้าระบุจะดึงเฉพาะ key นั้น
- */
+* GET: ดึงค่าตั้งค่า
+*
+* Parameters:
+* - key (optional): ถ้าระบุจะดึงเฉพาะ key นั้น
+*/
 function handleGet() {
     global $pdo;
-    
     $key = $_GET['key'] ?? null;
     
     try {
         if ($key) {
-            // ดึงเฉพาะ key (ใช้ column name ใหม่: key, value)
+            // ดึงเฉพาะ key (ไม่ใช้ cache เพราะอาจมีการเปลี่ยนแปลงบ่อย)
             $stmt = $pdo->prepare("SELECT value FROM settings WHERE key = :key");
             $stmt->execute(['key' => $key]);
             $row = $stmt->fetch();
@@ -75,12 +72,19 @@ function handleGet() {
                 http_response_code(404);
             }
         } else {
-            // ดึงทั้งหมด (ใช้ column name ใหม่: key, value)
-            $stmt = $pdo->query("SELECT key, value FROM settings");
-            $settings = [];
+            // ดึงทั้งหมด (ใช้ cache)
+            $settings = cache_get('settings:all');
             
-            while ($row = $stmt->fetch()) {
-                $settings[$row['key']] = $row['value'];
+            if ($settings === false) {
+                // Cache miss - query from database
+                $stmt = $pdo->query("SELECT key, value FROM settings");
+                $settings = [];
+                while ($row = $stmt->fetch()) {
+                    $settings[$row['key']] = $row['value'];
+                }
+                
+                // Save to cache (1 hour)
+                cache_set('settings:all', $settings, 3600);
             }
             
             sendResponse('success', [
@@ -95,19 +99,18 @@ function handleGet() {
 }
 
 /**
- * PUT: อัปเดตค่าตั้งค่า
- *
- * Body (JSON):
- * {
- *   "settings": {
- *     "store_name": "ชื่อร้านใหม่",
- *     "store_address": "ที่อยู่ใหม่"
- *   }
- * }
- */
+* PUT: อัปเดตค่าตั้งค่า
+*
+* Body (JSON):
+* {
+*   "settings": {
+*     "store_name": "ชื่อร้านใหม่",
+*     "store_address": "ที่อยู่ใหม่"
+*   }
+* }
+*/
 function handlePut() {
     global $pdo;
-    
     $input = getJSONInput();
     
     if (!$input || !isset($input['settings']) || !is_array($input['settings'])) {
@@ -153,10 +156,9 @@ function handlePut() {
             }
             
             // อัปเดตหรือเพิ่มค่า (PostgreSQL ใช้ ON CONFLICT)
-            // ⚠️ ใช้ column name ใหม่: key, value
-            $sql = "INSERT INTO settings (key, value) 
+            $sql = "INSERT INTO settings (key, value)
                     VALUES (:key, :value)
-                    ON CONFLICT (key) DO UPDATE SET 
+                    ON CONFLICT (key) DO UPDATE SET
                     value = EXCLUDED.value,
                     updated_at = CURRENT_TIMESTAMP";
             
@@ -171,6 +173,9 @@ function handlePut() {
         
         // Commit transaction
         $pdo->commit();
+        
+        // Clear cache after successful update
+        cache_delete('settings:all');
         
         sendResponse('success', [
             'updated_keys' => $updatedKeys,
