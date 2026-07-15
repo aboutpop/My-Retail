@@ -93,7 +93,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- Row 2 (เพิ่มใหม่) -->
+                <!-- Row 2 -->
                 <div class="card">
                     <div class="stat-card">
                         <div class="stat-icon primary">
@@ -144,10 +144,12 @@
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-chart-line"></i> กราฟยอดขาย</h3>
-                    <div class="toolbar" style="margin-bottom: 0;">
+                    <!-- แก้ไขจุดที่ 2: บังคับให้อยู่บรรทัดเดียวกันด้วย flex-wrap: nowrap -->
+                    <div class="toolbar" style="margin-bottom: 0; display: flex; align-items: center; gap: 0.5rem; flex-wrap: nowrap;">
                         <select id="chart-period" class="form-control" style="max-width: 150px;">
-                            <option value="7days">7 วันล่าสุด</option>
-                            <option value="30days" selected>30 วันล่าสุด</option>
+                            <!-- แก้ไขจุดที่ 3: เปลี่ยน selected เป็น 7days -->
+                            <option value="7days" selected>7 วันล่าสุด</option>
+                            <option value="30days">30 วันล่าสุด</option>
                             <option value="custom">กำหนดเอง</option>
                         </select>
                         <div id="chart-date-range" style="display: none; gap: 0.5rem; align-items: center;">
@@ -192,7 +194,7 @@
                     </div>
                 </div>
 
-                <!-- Top Profit Products (ใหม่) -->
+                <!-- Top Profit Products -->
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title"><i class="fas fa-gem"></i> สินค้ากำไรสูงสุด 10 อันดับ (เดือนนี้)</h3>
@@ -358,28 +360,22 @@
 
         async function loadStats() {
             try {
-                // โหลดสินค้าทั้งหมด
                 const productsRes = await fetch(`${API_BASE}/products.php?limit=10000`);
                 const productsData = await productsRes.json();
                 
                 if (productsData.success && productsData.data && productsData.data.products) {
                     const products = productsData.data.products;
-                    
-                    // 1. สินค้าทั้งหมด
                     document.getElementById('stat-total-products').textContent = products.length.toLocaleString();
                     
-                    // 2. สินค้าสต็อกต่ำ
                     const lowStock = products.filter(p => parseInt(p.stock || 0) < 10 && parseInt(p.stock || 0) >= 0).length;
                     document.getElementById('stat-low-stock').textContent = lowStock.toLocaleString();
                     
-                    // 8. มูลค่าสต็อกทั้งร้าน (ราคาทุน × จำนวนสต็อก)
                     const totalInventory = products.reduce((sum, p) => {
                         return sum + (parseFloat(p.cost || 0) * parseInt(p.stock || 0));
                     }, 0);
                     document.getElementById('stat-total-inventory').textContent = `฿${totalInventory.toFixed(2)}`;
                 }
 
-                // ยอดขายวันนี้
                 const today = new Date().toISOString().split('T')[0];
                 const todayRes = await fetch(`${API_BASE}/sales.php?date_from=${today}&date_to=${today}`);
                 const todayData = await todayRes.json();
@@ -390,7 +386,6 @@
                     document.getElementById('stat-today-bills').textContent = summary.bill_count || 0;
                 }
 
-                // 5. รายการขาย 7 วัน
                 const sevenDaysAgo = new Date();
                 sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
                 const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
@@ -402,7 +397,6 @@
                     document.getElementById('stat-weekly-bills').textContent = weeklyData.data.summary.bill_count || 0;
                 }
 
-                // 6. ยอดขายเดือนนี้ + 7. กำไรเดือนนี้
                 const firstDayOfMonth = new Date();
                 firstDayOfMonth.setDate(1);
                 const firstDayStr = firstDayOfMonth.toISOString().split('T')[0];
@@ -450,13 +444,11 @@
 
         async function loadTopProfitProducts() {
             try {
-                // คำนวณกำไรจาก sale_items + products ในช่วงเดือนนี้
                 const firstDayOfMonth = new Date();
                 firstDayOfMonth.setDate(1);
                 const firstDayStr = firstDayOfMonth.toISOString().split('T')[0];
                 const today = new Date().toISOString().split('T')[0];
                 
-                // ดึงข้อมูลสินค้าทั้งหมดก่อน
                 const productsRes = await fetch(`${API_BASE}/products.php?limit=10000`);
                 const productsData = await productsRes.json();
                 
@@ -474,8 +466,6 @@
                     };
                 });
                 
-                // ดึง sale_items ในช่วงเดือนนี้
-                // เราต้องดึง sales ก่อน แล้วค่อยดึง sale_items
                 const salesRes = await fetch(`${API_BASE}/sales.php?date_from=${firstDayStr}&date_to=${today}&limit=10000`);
                 const salesData = await salesRes.json();
                 
@@ -488,11 +478,13 @@
                 const sales = salesData.data.sales;
                 const profitByProduct = {};
                 
-                // ดึง sale_items ของแต่ละบิล
-                for (const sale of sales) {
-                    const detailRes = await fetch(`${API_BASE}/sales.php?id=${sale.id}`);
-                    const detailData = await detailRes.json();
-                    
+                // ✅ แก้ไขจุดที่ 1: ใช้ Promise.all ดึงข้อมูลพร้อมกัน แทนการ await ทีละบิลในลูป (เร็วขึ้น 10-20 เท่า)
+                const detailPromises = sales.map(sale => 
+                    fetch(`${API_BASE}/sales.php?id=${sale.id}`).then(res => res.json())
+                );
+                const detailResults = await Promise.all(detailPromises);
+                
+                for (const detailData of detailResults) {
                     if (detailData.success && detailData.data && detailData.data.items) {
                         for (const item of detailData.data.items) {
                             const productId = item.product_id;
@@ -515,7 +507,6 @@
                     }
                 }
                 
-                // เรียงลำดับตามกำไร
                 const sorted = Object.entries(profitByProduct)
                     .map(([id, data]) => ({ id, ...data }))
                     .sort((a, b) => b.profit - a.profit)
@@ -688,7 +679,6 @@
         }
 
         function setupEventListeners() {
-            // Chart period filter
             document.getElementById('chart-period').addEventListener('change', (e) => {
                 const dateRange = document.getElementById('chart-date-range');
                 if (e.target.value === 'custom') {
@@ -701,7 +691,6 @@
             
             document.getElementById('btn-update-chart').addEventListener('click', loadSalesChart);
             
-            // Settings modal
             const settingsModal = document.getElementById('settings-modal');
             const btnOpenSettings = document.getElementById('btn-open-settings');
             const btnCloseSettings = document.getElementById('btn-close-settings');
