@@ -55,3 +55,4 @@ temp/
 /backup_html
 api/test_connection.php
 .htaccess.txt
+readme.txt
