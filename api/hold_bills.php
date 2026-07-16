@@ -2,27 +2,25 @@
 /**
  * Held Bills API - จัดการบิลที่พักไว้ (Hold Bills)
  * Endpoint: /api/hold_bills.php
- * Version: 1.4 (PostgreSQL)
- *
- * ฟีเจอร์:
- * - พักบิลไว้ชั่วคราว (สูงสุด 5 บิลต่อ session)
- * - ดึงรายการบิลที่พักไว้
- * - อัปเดตบิลที่พักไว้
- * - ยกเลิกบิลที่พักไว้
- *
- * หมายเหตุ:
- * - items เก็บเป็น JSONB ใน PostgreSQL
- * - แต่ละ session สามารถพักบิลได้สูงสุด 5 บิล
- * - bill_index ใช้เพื่อระบุตำแหน่ง (1-5)
+ * Version: 1.5 (Fixed: Support session_id from body for POST/PUT)
  */
 
 require_once 'config.php';
 
-// ค่าคงที่: จำนวนบิลสูงสุดที่พักได้ต่อ session
 define('MAX_HELD_BILLS', 5);
 
 $method = $_SERVER['REQUEST_METHOD'];
+
+// ✅ แก้ไข: รองรับ session_id จากทั้ง query string และ body
 $sessionId = $_GET['session_id'] ?? null;
+
+// ถ้าไม่มีใน query string และ method เป็น POST/PUT ให้ลองอ่านจาก body
+if (!$sessionId && in_array($method, ['POST', 'PUT'])) {
+    $input = getJSONInput();
+    if ($input && isset($input['session_id'])) {
+        $sessionId = $input['session_id'];
+    }
+}
 
 try {
     switch ($method) {
@@ -73,11 +71,9 @@ function handleGet($sessionId) {
         
         $heldBills = [];
         foreach ($rows as $row) {
-            // Decode JSON items (JSONB จะคืนค่าเป็น string)
             $items = json_decode($row['items'], true) ?? [];
-            
-            // คำนวณจำนวนรายการและยอดรวม
             $itemCount = count($items);
+            
             $totalAmount = 0;
             foreach ($items as $item) {
                 $totalAmount += ($item['quantity'] ?? 0) * ($item['price'] ?? 0);
@@ -124,7 +120,6 @@ function handlePost($sessionId) {
     }
     
     $input = getJSONInput();
-    
     if (!$input || !isset($input['items']) || !is_array($input['items'])) {
         sendResponse('error', [], 'ข้อมูลไม่ถูกต้อง: ต้องมี items เป็น array');
         http_response_code(400);
@@ -163,7 +158,6 @@ function handlePost($sessionId) {
         
         $usedIndices = array_map(function($row) { return (int)$row['bill_index']; }, $indexRows);
         
-        // หา index ว่าง
         $newIndex = null;
         for ($i = 1; $i <= MAX_HELD_BILLS; $i++) {
             if (!in_array($i, $usedIndices)) {
@@ -193,7 +187,7 @@ function handlePost($sessionId) {
             return;
         }
         
-        // Insert (ใช้ RETURNING id)
+        // Insert
         $insertSql = "
             INSERT INTO held_bills (session_id, bill_index, items, discount, payment_method, customer_name, note)
             VALUES (:session_id, :bill_index, :items::jsonb, :discount, :payment_method, :customer_name, :note)
@@ -219,6 +213,7 @@ function handlePost($sessionId) {
             'bill_index' => $newIndex,
             'session_id' => $sessionId
         ], 'พักบิลสำเร็จ');
+        
         http_response_code(201);
         
     } catch (PDOException $e) {
@@ -230,7 +225,6 @@ function handlePost($sessionId) {
 
 /**
  * PUT: อัปเดตบิลที่พัก
- * URL: ?id=X&session_id=Y
  */
 function handlePut($sessionId) {
     global $pdo;
@@ -312,7 +306,6 @@ function handlePut($sessionId) {
             return;
         }
         
-        // Build SQL
         $sql = "UPDATE held_bills SET " . implode(', ', $updates) . " WHERE id = :id AND session_id = :session_id";
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
@@ -331,7 +324,6 @@ function handlePut($sessionId) {
 
 /**
  * DELETE: ยกเลิกบิลที่พัก
- * URL: ?id=X&session_id=Y
  */
 function handleDelete($sessionId) {
     global $pdo;
@@ -363,7 +355,6 @@ function handleDelete($sessionId) {
         
         $billIndex = $row['bill_index'];
         
-        // Delete
         $deleteStmt = $pdo->prepare("DELETE FROM held_bills WHERE id = :id AND session_id = :session_id");
         $deleteStmt->execute(['id' => $id, 'session_id' => $sessionId]);
         

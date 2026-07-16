@@ -1,0 +1,360 @@
+/* =========================================
+Dashboard - Specific Styles
+Version: 1.0 - Dashboard Page Only
+========================================= */
+
+/* =========================================
+🆕 Stats Grid 8 (สำหรับ Dashboard)
+========================================= */
+.stats-grid-8 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 1200px) {
+    .stats-grid-8 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .stats-grid-8 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================================
+Dashboard — Chart Containers
+========================================= */
+.dashboard-charts {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+    .dashboard-charts {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chart-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+}
+
+.chart-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.chart-card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chart-card-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* =========================================
+Dashboard — Recent Sales Table
+========================================= */
+.recent-sales-section {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+}
+
+.recent-sales-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.recent-sales-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.recent-sales-link {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+}
+
+.recent-sales-link:hover {
+    color: var(--primary-hover);
+    gap: 8px;
+}
+
+/* =========================================
+Dashboard — Quick Stats Row
+========================================= */
+.quick-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+    .quick-stats-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.quick-stat-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.quick-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.quick-stat-icon.today-sales {
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+}
+
+.quick-stat-icon.today-bills {
+    background: linear-gradient(135deg, var(--success), #059669);
+}
+
+.quick-stat-icon.today-profit {
+    background: linear-gradient(135deg, var(--warning), #d97706);
+}
+
+.quick-stat-info h4 {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.quick-stat-info .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.2;
+}
+
+/* =========================================
+Dashboard — Top Products List
+========================================= */
+.top-products-section {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+}
+
+.top-products-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.top-products-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.top-products-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.top-product-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: var(--radius);
+    background: var(--bg-main);
+    transition: all 0.2s;
+}
+
+.top-product-item:hover {
+    background: var(--bg-hover);
+    transform: translateX(4px);
+}
+
+.top-product-rank {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.top-product-rank.gold {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
+
+.top-product-rank.silver {
+    background: linear-gradient(135deg, #9ca3af, #6b7280);
+}
+
+.top-product-rank.bronze {
+    background: linear-gradient(135deg, #d97706, #b45309);
+}
+
+.top-product-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.top-product-name {
+    font-weight: 500;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.top-product-category {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.top-product-stats {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.top-product-qty {
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 0.95rem;
+}
+
+.top-product-sales {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* =========================================
+Dashboard — Low Stock Alert
+========================================= */
+.low-stock-section {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+}
+
+.low-stock-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.low-stock-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--danger);
+}
+
+.low-stock-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.low-stock-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    background: var(--danger-light);
+    border-left: 3px solid var(--danger);
+}
+
+.low-stock-info {
+    flex: 1;
+}
+
+.low-stock-name {
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.low-stock-barcode {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-family: monospace;
+}
+
+.low-stock-qty {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--danger);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
