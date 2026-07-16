@@ -1,14 +1,16 @@
 /**
  * API Configuration
  * Central configuration for all API endpoints
+ * Version: 2.0 - Dynamic BASE_URL (Auto-detect Environment)
  */
 
 const API_CONFIG = {
-    // Base URL สำหรับ API - ใช้ Local สำหรับทดสอบ
-    BASE_URL: 'http://localhost/myproject/My-Retail/api',
-    
-    // สำหรับ Production (Railway)
-    // BASE_URL: 'https://my-retail-production.up.railway.app/api',
+    // ✅ Dynamic BASE_URL - ทำงานได้ทั้ง Local และ Production
+    // Local (XAMPP): ตรวจจับ /myproject/ → ใช้ /myproject/My-Retail/api
+    // Production (Railway): ไม่พบ /myproject/ → ใช้ /api
+    BASE_URL: window.location.pathname.includes('/myproject/') 
+        ? '/myproject/My-Retail/api' 
+        : '/api',
     
     // API Endpoints
     ENDPOINTS: {
