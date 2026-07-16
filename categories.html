@@ -6,6 +6,7 @@
     <title>จัดการหมวดหมู่ - POS & Stock Retail Manager</title>
     <link rel="stylesheet" href="css/fonts.css">
     <link rel="stylesheet" href="assets/css/all.min.css">
+    <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -38,9 +39,9 @@
         <!-- Topbar -->
         <header class="topbar">
             <h1><i class="fas fa-tags"></i> จัดการหมวดหมู่</h1>
-            <div style="display: flex; align-items: center; gap: 16px;">
-                <span id="store-name" style="color: var(--text-muted); font-size: 0.9rem; font-weight: 500;"></span>
-                <span id="current-date" style="color: var(--text-muted); font-size: 0.9rem;"></span>
+            <div class="flex gap-2">
+                <span id="store-name" class="text-muted" style="font-size: 0.9rem; font-weight: 500;"></span>
+                <span id="current-date" class="text-muted" style="font-size: 0.9rem;"></span>
             </div>
         </header>
 
@@ -81,52 +82,43 @@
                         </div>
                     </div>
                 </div>
-                <div class="card">
-                    <div class="stat-card">
-                        <div class="stat-icon info">
-                            <i class="fas fa-info-circle"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 style="font-size: 0.85rem;">ใช้ปุ่ม ⬆️⬇️ เพื่อเปลี่ยนลำดับ</h3>
-                            <p>ลำดับจะ sync กับ POS</p>
-                        </div>
-                    </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="alert alert-info mb-3">
+                <i class="fas fa-info-circle"></i>
+                <div>
+                    <strong>การจัดลำดับหมวดหมู่:</strong> ใช้ปุ่ม ⬆️⬇️ เพื่อเปลี่ยนลำดับ ลำดับจะ sync กับ POS อัตโนมัติ
                 </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <button class="btn btn-primary" id="btn-add-category">
+                    <i class="fas fa-plus"></i> เพิ่มหมวดหมู่
+                </button>
+                <button class="btn btn-outline" id="btn-reset-order">
+                    <i class="fas fa-undo"></i> รีเซ็ตลำดับ
+                </button>
             </div>
 
             <!-- Categories Table -->
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-list"></i> รายการหมวดหมู่</h3>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button class="btn btn-outline btn-sm" id="btn-reset-sort">
-                            <i class="fas fa-sync"></i> รีเซ็ตลำดับ
-                        </button>
-                        <button class="btn btn-primary" id="btn-add-category">
-                            <i class="fas fa-plus"></i> เพิ่มหมวดหมู่
-                        </button>
-                    </div>
                 </div>
-
-                <div class="toolbar">
-                    <input type="text" id="search-input" class="grow" placeholder="ค้นหาหมวดหมู่...">
-                    <button class="btn btn-outline" id="btn-clear-search">
-                        <i class="fas fa-times"></i> ล้าง
-                    </button>
-                </div>
-
                 <div class="table-container">
                     <table class="table">
                         <thead>
                             <tr>
-                                <th style="width: 70px; text-align: center;">ลำดับ</th>
+                                <th style="width: 80px; text-align: center;">ลำดับ</th>
                                 <th>ชื่อหมวดหมู่</th>
                                 <th>รายละเอียด</th>
-                                <th style="text-align: center; width: 120px;">จำนวนสินค้า</th>
-                                <th style="text-align: center; width: 200px;">จัดการ</th>
+                                <th style="width: 120px; text-align: center;">จำนวนสินค้า</th>
+                                <th style="width: 200px; text-align: center;">จัดการ</th>
                             </tr>
                         </thead>
-                        <tbody id="categories-tbody">
+                        <tbody id="categories-table">
                             <tr>
                                 <td colspan="5" class="text-center text-muted">กำลังโหลดข้อมูล...</td>
                             </tr>
@@ -145,21 +137,23 @@
                 <button class="modal-close" id="btn-close-modal">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="category-form">
+                <form id="category-form" class="modal-form">
                     <input type="hidden" id="category-id">
+                    
                     <div class="form-group">
-                        <label class="form-label">ชื่อหมวดหมู่ <span style="color: var(--danger);">*</span></label>
-                        <input type="text" class="form-control" id="form-name" required>
+                        <label class="form-label">ชื่อหมวดหมู่ <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="category-name" required>
                     </div>
+
                     <div class="form-group">
                         <label class="form-label">รายละเอียด</label>
-                        <textarea class="form-control" id="form-description" rows="3"></textarea>
+                        <textarea class="form-control" id="category-description" rows="3"></textarea>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" id="btn-cancel-modal">ยกเลิก</button>
-                <button class="btn btn-primary" id="btn-save-category">
+                <button class="btn btn-success" id="btn-save-category">
                     <i class="fas fa-save"></i> บันทึก
                 </button>
             </div>
@@ -186,7 +180,7 @@
                 <div id="tab-main" class="settings-content">
                     <form id="form-main-settings">
                         <div class="form-group">
-                            <label class="form-label">ชื่อร้าน <span style="color: var(--danger);">*</span></label>
+                            <label class="form-label">ชื่อร้าน <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="setting-store-name" required>
                         </div>
                         <div class="form-group">
@@ -235,434 +229,9 @@
         </div>
     </div>
 
-    <script>
-        const API_BASE = window.location.pathname.includes('/myproject/') ? '/myproject/My-Retail/api' : '/api';
-        
-        // State
-        let categories = [];
-        let searchTerm = '';
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', async () => {
-            setCurrentDate();
-            await loadStoreName();
-            await loadCategories();
-            setupEventListeners();
-            
-            console.log('✅ Categories Management initialized');
-        });
-
-        function setCurrentDate() {
-            const now = new Date();
-            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-            document.getElementById('current-date').textContent = now.toLocaleDateString('th-TH', options);
-        }
-
-        async function loadStoreName() {
-            try {
-                const res = await fetch(`${API_BASE}/settings.php?key=store_name`);
-                const data = await res.json();
-                if (data.success && data.data && data.data.settings) {
-                    const storeName = data.data.settings.store_name || 'ร้านค้า';
-                    document.getElementById('store-name').textContent = storeName;
-                    document.title = `จัดการหมวดหมู่ - ${storeName}`;
-                }
-            } catch (error) {
-                console.error('Error loading store name:', error);
-            }
-        }
-
-        async function loadCategories() {
-            try {
-                const res = await fetch(`${API_BASE}/categories.php?include_count=true`);
-                const data = await res.json();
-                
-                if (data.success && data.data && data.data.categories) {
-                    categories = data.data.categories;
-                    updateStats();
-                    renderTable();
-                }
-            } catch (error) {
-                console.error('Error loading categories:', error);
-                document.getElementById('categories-tbody').innerHTML = `
-                    <tr>
-                        <td colspan="5" class="text-center text-danger">
-                            <i class="fas fa-exclamation-triangle"></i> เกิดข้อผิดพลาดในการโหลดข้อมูล
-                        </td>
-                    </tr>
-                `;
-            }
-        }
-
-        function updateStats() {
-            const total = categories.length;
-            const totalProducts = categories.reduce((sum, c) => sum + (c.product_count || 0), 0);
-            const emptyCategories = categories.filter(c => c.product_count === 0).length;
-            
-            document.getElementById('stat-total-categories').textContent = total;
-            document.getElementById('stat-total-products').textContent = totalProducts;
-            document.getElementById('stat-empty-categories').textContent = emptyCategories;
-        }
-
-        function renderTable() {
-            const tbody = document.getElementById('categories-tbody');
-            
-            // กรองตาม search term
-            let filtered = categories;
-            if (searchTerm) {
-                const term = searchTerm.toLowerCase();
-                filtered = categories.filter(c => 
-                    c.name.toLowerCase().includes(term) || 
-                    (c.description && c.description.toLowerCase().includes(term))
-                );
-            }
-            
-            if (filtered.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="text-center text-muted">
-                            <i class="fas fa-inbox"></i> ไม่พบหมวดหมู่
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            tbody.innerHTML = filtered.map((cat, index) => {
-                const isFirst = index === 0;
-                const isLast = index === filtered.length - 1;
-                
-                const upDisabled = isFirst ? 'disabled' : '';
-                const downDisabled = isLast ? 'disabled' : '';
-                
-                const countClass = cat.product_count === 0 ? 'text-muted' : 'text-success';
-                const countBadge = cat.product_count === 0 
-                    ? '<span class="badge badge-warning">ไม่มีสินค้า</span>'
-                    : `<strong>${cat.product_count}</strong>`;
-                
-                return `
-                    <tr data-id="${cat.id}">
-                        <td style="text-align: center;">
-                            <strong style="color: var(--primary); font-size: 1.1rem;">${cat.sort_order}</strong>
-                        </td>
-                        <td><strong>${cat.name}</strong></td>
-                        <td class="text-muted">${cat.description || '-'}</td>
-                        <td style="text-align: center;" class="${countClass}">${countBadge}</td>
-                        <td style="text-align: center;">
-                            <div class="btn-icon-group">
-                                <button class="btn-icon move-up" 
-                                        onclick="reorderCategory(${cat.id}, 'up')" 
-                                        ${upDisabled}
-                                        title="เลื่อนขึ้น">
-                                    <i class="fas fa-arrow-up"></i>
-                                </button>
-                                <button class="btn-icon move-down" 
-                                        onclick="reorderCategory(${cat.id}, 'down')" 
-                                        ${downDisabled}
-                                        title="เลื่อนลง">
-                                    <i class="fas fa-arrow-down"></i>
-                                </button>
-                                <button class="btn-icon edit" 
-                                        onclick="editCategory(${cat.id})" 
-                                        title="แก้ไข">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn-icon delete" 
-                                        onclick="deleteCategory(${cat.id}, '${cat.name.replace(/'/g, "\\'")}')" 
-                                        title="ลบ">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        // 🆕 Reorder Category (เลื่อนขึ้น/ลง)
-        async function reorderCategory(id, direction) {
-            // หา index ปัจจุบัน
-            const currentIndex = categories.findIndex(c => c.id === id);
-            if (currentIndex === -1) return;
-            
-            // หา id ที่จะสลับด้วย
-            let targetIndex;
-            if (direction === 'up') {
-                targetIndex = currentIndex - 1;
-            } else {
-                targetIndex = currentIndex + 1;
-            }
-            
-            // ตรวจสอบขอบเขต
-            if (targetIndex < 0 || targetIndex >= categories.length) return;
-            
-            const id1 = categories[currentIndex].id;
-            const id2 = categories[targetIndex].id;
-            
-            try {
-                const res = await fetch(`${API_BASE}/categories.php?action=reorder`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id1, id2 })
-                });
-                
-                const data = await res.json();
-                
-                if (data.success) {
-                    // Reload ข้อมูลใหม่
-                    await loadCategories();
-                } else {
-                    alert('❌ ไม่สามารถเปลี่ยนลำดับได้: ' + data.message);
-                }
-            } catch (error) {
-                console.error('Error reordering category:', error);
-                alert('เกิดข้อผิดพลาดในการเปลี่ยนลำดับ');
-            }
-        }
-
-        function openModal(categoryId = null) {
-            const modal = document.getElementById('category-modal');
-            const title = document.getElementById('modal-title');
-            const form = document.getElementById('category-form');
-            
-            if (categoryId) {
-                const category = categories.find(c => c.id === categoryId);
-                if (!category) return;
-                
-                title.innerHTML = '<i class="fas fa-edit"></i> แก้ไขหมวดหมู่';
-                document.getElementById('category-id').value = category.id;
-                document.getElementById('form-name').value = category.name;
-                document.getElementById('form-description').value = category.description || '';
-            } else {
-                title.innerHTML = '<i class="fas fa-plus-circle"></i> เพิ่มหมวดหมู่';
-                form.reset();
-                document.getElementById('category-id').value = '';
-            }
-            
-            modal.style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('category-modal').style.display = 'none';
-        }
-
-        function editCategory(id) {
-            openModal(id);
-        }
-
-        async function saveCategory() {
-            const id = document.getElementById('category-id').value;
-            const name = document.getElementById('form-name').value.trim();
-            const description = document.getElementById('form-description').value.trim();
-            
-            if (!name) {
-                alert('กรุณากรอกชื่อหมวดหมู่');
-                return;
-            }
-            
-            try {
-                const url = id ? `${API_BASE}/categories.php?id=${id}` : `${API_BASE}/categories.php`;
-                const method = id ? 'PUT' : 'POST';
-                
-                const res = await fetch(url, {
-                    method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, description })
-                });
-                
-                const data = await res.json();
-                
-                if (data.success) {
-                    alert(id ? 'แก้ไขหมวดหมู่สำเร็จ' : 'เพิ่มหมวดหมู่สำเร็จ');
-                    closeModal();
-                    await loadCategories();
-                } else {
-                    alert('เกิดข้อผิดพลาด: ' + data.message);
-                }
-            } catch (error) {
-                console.error('Error saving category:', error);
-                alert('เกิดข้อผิดพลาดในการบันทึก');
-            }
-        }
-
-        async function deleteCategory(id, name) {
-            if (!confirm(`ต้องการลบหมวดหมู่ "${name}" หรือไม่?\n\n⚠️ หมายเหตุ: ไม่สามารถลบได้ถ้ามีสินค้าในหมวดหมู่นี้`)) {
-                return;
-            }
-            
-            try {
-                const res = await fetch(`${API_BASE}/categories.php?id=${id}`, {
-                    method: 'DELETE'
-                });
-                
-                const data = await res.json();
-                
-                if (data.success) {
-                    alert('ลบหมวดหมู่สำเร็จ');
-                    await loadCategories();
-                } else {
-                    alert('ไม่สามารถลบได้: ' + data.message);
-                }
-            } catch (error) {
-                console.error('Error deleting category:', error);
-                alert('เกิดข้อผิดพลาดในการลบ');
-            }
-        }
-
-        // 🆕 รีเซ็ตลำดับ (เรียงตาม id)
-        async function resetSortOrder() {
-            if (!confirm('ต้องการรีเซ็ตลำดับหมวดหมู่ตามค่าเริ่มต้น (เรียงตาม id) หรือไม่?')) {
-                return;
-            }
-            
-            try {
-                // เรียงตาม id แล้วสลับ sort_order ให้ตรงกับ id
-                const sorted = [...categories].sort((a, b) => a.id - b.id);
-                
-                let successCount = 0;
-                for (let i = 0; i < sorted.length; i++) {
-                    const cat = sorted[i];
-                    const newSortOrder = i + 1;
-                    
-                    if (cat.sort_order !== newSortOrder) {
-                        const res = await fetch(`${API_BASE}/categories.php?id=${cat.id}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ sort_order: newSortOrder })
-                        });
-                        
-                        const data = await res.json();
-                        if (data.success) successCount++;
-                    }
-                }
-                
-                alert(`✅ รีเซ็ตลำดับสำเร็จ (${successCount} รายการ)`);
-                await loadCategories();
-            } catch (error) {
-                console.error('Error resetting sort order:', error);
-                alert('เกิดข้อผิดพลาดในการรีเซ็ตลำดับ');
-            }
-        }
-
-        function setupEventListeners() {
-            // Search
-            document.getElementById('search-input').addEventListener('input', (e) => {
-                searchTerm = e.target.value;
-                renderTable();
-            });
-            
-            document.getElementById('btn-clear-search').addEventListener('click', () => {
-                document.getElementById('search-input').value = '';
-                searchTerm = '';
-                renderTable();
-            });
-            
-            // Add category button
-            document.getElementById('btn-add-category').addEventListener('click', () => openModal());
-            
-            // 🆕 Reset sort order button
-            document.getElementById('btn-reset-sort').addEventListener('click', resetSortOrder);
-            
-            // Modal buttons
-            document.getElementById('btn-close-modal').addEventListener('click', closeModal);
-            document.getElementById('btn-cancel-modal').addEventListener('click', closeModal);
-            document.getElementById('btn-save-category').addEventListener('click', saveCategory);
-            document.getElementById('category-modal').addEventListener('click', (e) => {
-                if (e.target.id === 'category-modal') closeModal();
-            });
-            
-            // ESC to close modal
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    const modal = document.getElementById('category-modal');
-                    if (modal.style.display === 'flex') {
-                        closeModal();
-                    }
-                }
-            });
-
-            // Settings modal
-            const settingsModal = document.getElementById('settings-modal');
-            const btnOpenSettings = document.getElementById('btn-open-settings');
-            const btnCloseSettings = document.getElementById('btn-close-settings');
-            const btnCancelSettings = document.getElementById('btn-cancel-settings');
-            const btnSaveSettings = document.getElementById('btn-save-settings');
-            const settingsTabs = document.querySelectorAll('.settings-tab');
-            const settingsContents = document.querySelectorAll('.settings-content');
-
-            btnOpenSettings.addEventListener('click', async (e) => {
-                e.preventDefault();
-                settingsModal.style.display = 'flex';
-                await loadSettings();
-            });
-
-            btnCloseSettings.addEventListener('click', () => settingsModal.style.display = 'none');
-            btnCancelSettings.addEventListener('click', () => settingsModal.style.display = 'none');
-            settingsModal.addEventListener('click', (e) => {
-                if (e.target === settingsModal) settingsModal.style.display = 'none';
-            });
-
-            settingsTabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const tabName = tab.dataset.tab;
-                    settingsTabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    settingsContents.forEach(c => c.style.display = 'none');
-                    document.getElementById(`tab-${tabName}`).style.display = 'block';
-                });
-            });
-
-            btnSaveSettings.addEventListener('click', async () => {
-                const newSettings = {
-                    store_name: document.getElementById('setting-store-name').value,
-                    store_address: document.getElementById('setting-store-address').value,
-                    receipt_footer: document.getElementById('setting-receipt-footer').value,
-                    welcome_message: document.getElementById('setting-welcome-message').value,
-                    quick_items_per_row: document.getElementById('setting-quick-items-per-row').value,
-                    quick_items_count: document.getElementById('setting-quick-items-count').value,
-                    quick_items_days: document.getElementById('setting-quick-items-days').value
-                };
-
-                try {
-                    const res = await fetch(`${API_BASE}/settings.php`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ settings: newSettings })
-                    });
-
-                    const data = await res.json();
-                    if (data.success) {
-                        alert('บันทึกการตั้งค่าสำเร็จ');
-                        settingsModal.style.display = 'none';
-                        await loadStoreName();
-                    } else {
-                        alert('เกิดข้อผิดพลาด: ' + data.message);
-                    }
-                } catch (error) {
-                    console.error('Error saving settings:', error);
-                    alert('ไม่สามารถบันทึกการตั้งค่าได้');
-                }
-            });
-        }
-
-        async function loadSettings() {
-            try {
-                const res = await fetch(`${API_BASE}/settings.php`);
-                const data = await res.json();
-                if (data.success && data.data && data.data.settings) {
-                    const s = data.data.settings;
-                    document.getElementById('setting-store-name').value = s.store_name || '';
-                    document.getElementById('setting-store-address').value = s.store_address || '';
-                    document.getElementById('setting-receipt-footer').value = s.receipt_footer || '';
-                    document.getElementById('setting-welcome-message').value = s.welcome_message || '';
-                    document.getElementById('setting-quick-items-per-row').value = s.quick_items_per_row || '6';
-                    document.getElementById('setting-quick-items-count').value = s.quick_items_count || '30';
-                    document.getElementById('setting-quick-items-days').value = s.quick_items_days || '30';
-                }
-            } catch (error) {
-                console.error('Error loading settings:', error);
-            }
-        }
-    </script>
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/categories.js"></script>
 </body>
 </html>

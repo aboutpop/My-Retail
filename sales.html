@@ -6,6 +6,7 @@
     <title>จัดการบิล - POS & Stock Retail Manager</title>
     <link rel="stylesheet" href="css/fonts.css">
     <link rel="stylesheet" href="assets/css/all.min.css">
+    <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -38,9 +39,9 @@
         <!-- Topbar -->
         <header class="topbar">
             <h1><i class="fas fa-receipt"></i> จัดการบิล</h1>
-            <div style="display: flex; align-items: center; gap: 16px;">
-                <span id="store-name" style="color: var(--text-muted); font-size: 0.9rem; font-weight: 500;"></span>
-                <span id="current-date" style="color: var(--text-muted); font-size: 0.9rem;"></span>
+            <div class="flex gap-2">
+                <span id="store-name" class="text-muted" style="font-size: 0.9rem; font-weight: 500;"></span>
+                <span id="current-date" class="text-muted" style="font-size: 0.9rem;"></span>
             </div>
         </header>
 
@@ -84,7 +85,7 @@
                 <div class="card">
                     <div class="stat-card">
                         <div class="stat-icon info">
-                            <i class="fas fa-chart-line"></i>
+                            <i class="fas fa-wallet"></i>
                         </div>
                         <div class="stat-info">
                             <h3 id="stat-net-total">฿0</h3>
@@ -94,36 +95,32 @@
                 </div>
             </div>
 
-            <!-- Filters -->
-            <div class="card">
-                <div class="toolbar">
-                    <!-- Period Filter (หน้าสุด) -->
-                    <select id="period-filter" class="form-control" style="max-width: 150px;">
-                        <option value="today">วันนี้</option>
-                        <option value="yesterday">เมื่อวานนี้</option>
-                        <option value="3days">3 วัน</option>
-                        <option value="7days" selected>7 วัน</option>
-                        <option value="30days">30 วัน</option>
-                        <option value="custom">กำหนดเอง</option>
-                    </select>
-
-                    <!-- Date Range -->
-                    <div id="date-range-container" style="display: none; gap: 0.5rem; align-items: center;">
-                        <label style="font-size: 0.85rem; color: var(--text-muted); white-space: nowrap;">ตั้งแต่วันที่</label>
-                        <input type="date" id="date-from" class="form-control" style="max-width: 160px;">
-                        <label style="font-size: 0.85rem; color: var(--text-muted); white-space: nowrap;">ถึงวันที่</label>
-                        <input type="date" id="date-to" class="form-control" style="max-width: 160px;">
-                    </div>
-
-                    <button class="btn btn-primary" id="btn-search">
-                        <i class="fas fa-search"></i> ค้นหา
-                    </button>
-                    <button class="btn btn-outline" id="btn-reset">
-                        <i class="fas fa-times"></i> ล้าง
-                    </button>
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <button class="btn btn-outline btn-sm date-filter active" data-days="0">วันนี้</button>
+                <button class="btn btn-outline btn-sm date-filter" data-days="1">เมื่อวานนี้</button>
+                <button class="btn btn-outline btn-sm date-filter" data-days="3">3 วัน</button>
+                <button class="btn btn-outline btn-sm date-filter" data-days="7">7 วัน</button>
+                <button class="btn btn-outline btn-sm date-filter" data-days="30">30 วัน</button>
+                <button class="btn btn-outline btn-sm date-filter" data-days="custom">กำหนดเอง</button>
+                
+                <div id="custom-date-range" style="display: none; gap: 0.5rem; align-items: center;">
+                    <label style="font-size: 0.85rem; color: var(--text-muted);">จาก</label>
+                    <input type="date" id="date-from" class="form-control" style="max-width: 150px;">
+                    <label style="font-size: 0.85rem; color: var(--text-muted);">ถึง</label>
+                    <input type="date" id="date-to" class="form-control" style="max-width: 150px;">
                 </div>
+                
+                <button class="btn btn-primary btn-sm" id="btn-search">
+                    <i class="fas fa-search"></i> ค้นหา
+                </button>
+                <button class="btn btn-outline btn-sm" id="btn-clear-filters">
+                    <i class="fas fa-times"></i> ล้าง
+                </button>
+            </div>
 
-                <!-- Sales Table -->
+            <!-- Sales Table -->
+            <div class="card">
                 <div class="table-container">
                     <table class="table">
                         <thead>
@@ -144,9 +141,6 @@
                         </tbody>
                     </table>
                 </div>
-
-                <!-- Pagination -->
-                <div class="pagination" id="pagination"></div>
             </div>
         </main>
     </div>
@@ -171,7 +165,7 @@
                 <div id="tab-main" class="settings-content">
                     <form id="form-main-settings">
                         <div class="form-group">
-                            <label class="form-label">ชื่อร้าน <span style="color: var(--danger);">*</span></label>
+                            <label class="form-label">ชื่อร้าน <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="setting-store-name" required>
                         </div>
                         <div class="form-group">
@@ -222,520 +216,52 @@
 
     <!-- Sale Detail Modal -->
     <div id="sale-detail-modal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-content" style="max-width: 800px;">
             <div class="modal-header">
-                <h3><i class="fas fa-receipt"></i> รายละเอียดบิล</h3>
-                <button class="modal-close" id="btn-close-sale-detail">&times;</button>
+                <h3><i class="fas fa-receipt"></i> รายละเอียดบิล <span id="detail-bill-no"></span></h3>
+                <button class="modal-close" id="btn-close-detail">&times;</button>
             </div>
             <div class="modal-body">
-                <div id="sale-detail-content">
-                    <!-- เนื้อหาจะถูกเติมด้วย JavaScript -->
+                <div class="grid grid-cols-2 mb-3">
+                    <div>
+                        <p><strong>วันที่:</strong> <span id="detail-date"></span></p>
+                        <p><strong>วิธีชำระ:</strong> <span id="detail-payment-method"></span></p>
+                    </div>
+                    <div style="text-align: right;">
+                        <p><strong>ยอดรวม:</strong> <span id="detail-total-amount" class="text-success"></span></p>
+                        <p><strong>ส่วนลด:</strong> <span id="detail-discount" class="text-warning"></span></p>
+                        <p><strong>ยอดสุทธิ:</strong> <span id="detail-net-total" class="text-primary" style="font-size: 1.2rem; font-weight: bold;"></span></p>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-danger" id="btn-void-sale" style="display: none;">
-                    <i class="fas fa-undo"></i> คืนเงิน (Void)
-                </button>
-                <button class="btn btn-secondary" id="btn-close-sale-detail-footer">ปิด</button>
-            </div>
-        </div>
-    </div>
 
-    <script>
-        const API_BASE = window.location.pathname.includes('/myproject/') ? '/myproject/My-Retail/api' : '/api';
-        
-        // State
-        let sales = [];
-        let currentOffset = 0;
-        const limit = 20;
-        let currentSale = null;
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', async () => {
-            setCurrentDate();
-            await loadStoreName();
-            
-            // ตั้งค่า default period เป็น 7 วัน
-            setPeriodFilter('7days');
-            
-            setupEventListeners();
-            await loadSales();
-            
-            console.log('✅ Bill Management initialized');
-        });
-
-        function setCurrentDate() {
-            const now = new Date();
-            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-            document.getElementById('current-date').textContent = now.toLocaleDateString('th-TH', options);
-        }
-
-        async function loadStoreName() {
-            try {
-                const res = await fetch(`${API_BASE}/settings.php?key=store_name`);
-                const data = await res.json();
-                if (data.success && data.data && data.data.settings) {
-                    const storeName = data.data.settings.store_name || 'ร้านค้า';
-                    document.getElementById('store-name').textContent = storeName;
-                    document.title = `จัดการบิล - ${storeName}`;
-                }
-            } catch (error) {
-                console.error('Error loading store name:', error);
-            }
-        }
-
-        // ตั้งค่า Period Filter
-        function setPeriodFilter(period) {
-            const periodSelect = document.getElementById('period-filter');
-            const dateRangeContainer = document.getElementById('date-range-container');
-            const dateFrom = document.getElementById('date-from');
-            const dateTo = document.getElementById('date-to');
-            
-            periodSelect.value = period;
-            
-            const today = new Date();
-            const formatDate = (date) => date.toISOString().split('T')[0];
-            
-            if (period === 'custom') {
-                dateRangeContainer.style.display = 'flex';
-            } else {
-                dateRangeContainer.style.display = 'none';
-                
-                let fromDate, toDate;
-                
-                switch (period) {
-                    case 'today':
-                        fromDate = today;
-                        toDate = today;
-                        break;
-                    case 'yesterday':
-                        fromDate = new Date(today);
-                        fromDate.setDate(today.getDate() - 1);
-                        toDate = fromDate;
-                        break;
-                    case '3days':
-                        fromDate = new Date(today);
-                        fromDate.setDate(today.getDate() - 2);
-                        toDate = today;
-                        break;
-                    case '7days':
-                        fromDate = new Date(today);
-                        fromDate.setDate(today.getDate() - 6);
-                        toDate = today;
-                        break;
-                    case '30days':
-                        fromDate = new Date(today);
-                        fromDate.setDate(today.getDate() - 29);
-                        toDate = today;
-                        break;
-                }
-                
-                dateFrom.value = formatDate(fromDate);
-                dateTo.value = formatDate(toDate);
-            }
-        }
-
-        async function loadSales() {
-            try {
-                const dateFrom = document.getElementById('date-from').value;
-                const dateTo = document.getElementById('date-to').value;
-                
-                let url = `${API_BASE}/sales.php?limit=${limit}&offset=${currentOffset}`;
-                if (dateFrom) url += `&date_from=${dateFrom}`;
-                if (dateTo) url += `&date_to=${dateTo}`;
-                
-                const res = await fetch(url);
-                const data = await res.json();
-                
-                if (data.success && data.data) {
-                    sales = data.data.sales || [];
-                    const summary = data.data.summary || {};
-                    
-                    // Update stats
-                    document.getElementById('stat-bill-count').textContent = summary.bill_count || 0;
-                    document.getElementById('stat-total-sales').textContent = `฿${(summary.total_sales || 0).toFixed(2)}`;
-                    document.getElementById('stat-total-discount').textContent = `฿${(summary.total_discount || 0).toFixed(2)}`;
-                    document.getElementById('stat-net-total').textContent = `฿${(summary.total_net || 0).toFixed(2)}`;
-                    
-                    renderSalesTable();
-                    renderPagination(data.data.total);
-                }
-            } catch (error) {
-                console.error('Error loading sales:', error);
-                document.getElementById('sales-table').innerHTML = `
-                    <tr>
-                        <td colspan="7" class="text-center text-danger">
-                            <i class="fas fa-exclamation-triangle"></i> เกิดข้อผิดพลาดในการโหลดข้อมูล
-                        </td>
-                    </tr>
-                `;
-            }
-        }
-
-        function renderSalesTable() {
-            const tbody = document.getElementById('sales-table');
-            
-            if (sales.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="text-center text-muted">
-                            <i class="fas fa-inbox"></i> ไม่พบข้อมูลบิลในช่วงเวลานี้
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            const paymentMethods = {
-                'cash': 'เงินสด',
-                'transfer': 'โอนเงิน',
-                'other': 'อื่นๆ'
-            };
-            
-            tbody.innerHTML = sales.map(sale => {
-                const date = new Date(sale.sale_date).toLocaleString('th-TH', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-                
-                const isVoid = sale.bill_no && sale.bill_no.includes('VOID');
-                const rowStyle = isVoid ? 'style="background: var(--danger-light); opacity: 0.7;"' : '';
-                const voidBadge = isVoid ? '<span class="badge badge-danger" style="margin-left: 0.5rem;">VOID</span>' : '';
-                
-                return `
-                    <tr ${rowStyle}>
-                        <td><strong>${sale.bill_no}</strong>${voidBadge}</td>
-                        <td>${date}</td>
-                        <td style="text-align: right;">฿${parseFloat(sale.total_amount).toFixed(2)}</td>
-                        <td style="text-align: right;">฿${parseFloat(sale.discount).toFixed(2)}</td>
-                        <td style="text-align: right; font-weight: bold;">฿${parseFloat(sale.net_total).toFixed(2)}</td>
-                        <td>${paymentMethods[sale.payment_method] || sale.payment_method}</td>
-                        <td style="text-align: center;">
-                            <button class="btn-icon view" onclick="viewSaleDetail(${sale.id})" title="ดูรายละเอียด">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function renderPagination(total) {
-            const pagination = document.getElementById('pagination');
-            const totalPages = Math.ceil(total / limit);
-            const currentPage = Math.floor(currentOffset / limit) + 1;
-            
-            if (totalPages <= 1) {
-                pagination.innerHTML = '';
-                return;
-            }
-            
-            let html = '';
-            html += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">
-                <i class="fas fa-chevron-left"></i>
-            </button>`;
-            
-            for (let i = 1; i <= totalPages; i++) {
-                if (i === currentPage) {
-                    html += `<button class="active">${i}</button>`;
-                } else if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-                    html += `<button onclick="goToPage(${i})">${i}</button>`;
-                } else if (i === currentPage - 3 || i === currentPage + 3) {
-                    html += `<button disabled>...</button>`;
-                }
-            }
-            
-            html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">
-                <i class="fas fa-chevron-right"></i>
-            </button>`;
-            
-            pagination.innerHTML = html;
-        }
-
-        function goToPage(page) {
-            currentOffset = (page - 1) * limit;
-            loadSales();
-        }
-
-        async function viewSaleDetail(saleId) {
-            try {
-                const res = await fetch(`${API_BASE}/sales.php?id=${saleId}`);
-                const data = await res.json();
-                
-                if (!data.success || !data.data) {
-                    alert('ไม่พบข้อมูลบิล');
-                    return;
-                }
-                
-                currentSale = data.data;
-                renderSaleDetailModal(data.data);
-            } catch (error) {
-                console.error('Error loading sale detail:', error);
-                alert('เกิดข้อผิดพลาดในการโหลดรายละเอียดบิล');
-            }
-        }
-
-        function renderSaleDetailModal(sale) {
-            const modal = document.getElementById('sale-detail-modal');
-            const content = document.getElementById('sale-detail-content');
-            const btnVoid = document.getElementById('btn-void-sale');
-            
-            const date = new Date(sale.sale_date).toLocaleString('th-TH', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-            
-            const paymentMethods = {
-                'cash': 'เงินสด',
-                'transfer': 'โอนเงิน',
-                'other': 'อื่นๆ'
-            };
-            
-            let itemsHtml = '';
-            if (sale.items && sale.items.length > 0) {
-                itemsHtml = `
-                    <h4 style="margin-bottom: 1rem;"><i class="fas fa-list"></i> รายการสินค้า</h4>
-                    <table class="table" style="font-size: 0.9rem;">
+                <h4 class="mb-2">รายการสินค้า</h4>
+                <div class="table-container">
+                    <table class="table">
                         <thead>
                             <tr>
                                 <th>สินค้า</th>
                                 <th style="text-align: center;">จำนวน</th>
                                 <th style="text-align: right;">ราคา</th>
-                                <th style="text-align: right;">รวม</th>
+                                <th style="text-align: right;"> subtotal</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            ${sale.items.map(item => `
-                                <tr>
-                                    <td>${item.product_name_snapshot || item.name}</td>
-                                    <td style="text-align: center;">${item.quantity}</td>
-                                    <td style="text-align: right;">฿${parseFloat(item.price_snapshot || item.price).toFixed(2)}</td>
-                                    <td style="text-align: right;">฿${parseFloat(item.subtotal).toFixed(2)}</td>
-                                </tr>
-                            `).join('')}
+                        <tbody id="detail-items">
                         </tbody>
                     </table>
-                `;
-            }
-            
-            const isVoid = sale.bill_no && sale.bill_no.includes('VOID');
-            
-            content.innerHTML = `
-                <div style="background: var(--bg-main); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem;">
-                        <div>
-                            <small style="color: var(--text-muted);">เลขบิล</small>
-                            <div style="font-family: monospace; font-weight: bold; font-size: 1.1rem;">${sale.bill_no}</div>
-                        </div>
-                        <div>
-                            <small style="color: var(--text-muted);">วันที่</small>
-                            <div style="font-weight: bold;">${date}</div>
-                        </div>
-                        <div>
-                            <small style="color: var(--text-muted);">วิธีชำระ</small>
-                            <div style="font-weight: bold;">${paymentMethods[sale.payment_method] || sale.payment_method}</div>
-                        </div>
-                        <div>
-                            <small style="color: var(--text-muted);">สถานะ</small>
-                            <div style="font-weight: bold;">
-                                ${isVoid 
-                                    ? '<span class="badge badge-danger">VOID (คืนเงิน)</span>' 
-                                    : '<span class="badge badge-success">ปกติ</span>'}
-                            </div>
-                        </div>
-                    </div>
                 </div>
-                
-                ${itemsHtml}
-                
-                <div style="background: var(--bg-main); padding: 1rem; border-radius: 8px; margin-top: 1rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span>ยอดรวม:</span>
-                        <span style="font-weight: bold;">฿${parseFloat(sale.total_amount).toFixed(2)}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span>ส่วนลด:</span>
-                        <span style="font-weight: bold; color: var(--danger);">-฿${parseFloat(sale.discount).toFixed(2)}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding-top: 0.5rem; border-top: 2px solid var(--border-color); font-size: 1.2rem;">
-                        <span style="font-weight: bold;">ยอดสุทธิ:</span>
-                        <span style="font-weight: bold; color: var(--primary);">฿${parseFloat(sale.net_total).toFixed(2)}</span>
-                    </div>
-                </div>
-            `;
-            
-            // แสดงปุ่ม Void เฉพาะบิลปกติ (ไม่ใช่ VOID)
-            if (!isVoid) {
-                btnVoid.style.display = 'inline-flex';
-                btnVoid.onclick = () => voidSale(sale);
-            } else {
-                btnVoid.style.display = 'none';
-            }
-            
-            modal.style.display = 'flex';
-        }
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="btn-void-sale">
+                    <i class="fas fa-undo"></i> คืนเงิน (Void)
+                </button>
+                <button class="btn btn-outline" id="btn-close-detail-footer">ปิด</button>
+            </div>
+        </div>
+    </div>
 
-        async function voidSale(sale) {
-            if (!confirm(`ต้องการคืนเงินบิล ${sale.bill_no} หรือไม่?\n\nการคืนเงินจะสร้างบิล Void ใหม่ และไม่ลบบิลเดิม`)) {
-                return;
-            }
-            
-            try {
-                const voidItems = sale.items.map(item => ({
-                    product_id: item.product_id,
-                    quantity: -item.quantity,
-                    price: item.price_snapshot || item.price
-                }));
-                
-                const res = await fetch(`${API_BASE}/sales.php`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        items: voidItems,
-                        discount: -sale.discount,
-                        payment_method: sale.payment_method,
-                        is_void: true,
-                        original_bill_no: sale.bill_no
-                    })
-                });
-                
-                const data = await res.json();
-                
-                if (data.success) {
-                    alert(`✅ คืนเงินสำเร็จ\nบิล Void: ${data.data.bill_no}`);
-                    document.getElementById('sale-detail-modal').style.display = 'none';
-                    await loadSales();
-                } else {
-                    alert('❌ ไม่สามารถคืนเงินได้: ' + data.message);
-                }
-            } catch (error) {
-                console.error('Error voiding sale:', error);
-                alert('เกิดข้อผิดพลาดในการคืนเงิน');
-            }
-        }
-
-        function setupEventListeners() {
-            // Period filter
-            document.getElementById('period-filter').addEventListener('change', (e) => {
-                setPeriodFilter(e.target.value);
-                currentOffset = 0;
-                loadSales();
-            });
-            
-            // Search button
-            document.getElementById('btn-search').addEventListener('click', () => {
-                currentOffset = 0;
-                loadSales();
-            });
-            
-            // Reset button
-            document.getElementById('btn-reset').addEventListener('click', () => {
-                setPeriodFilter('7days');
-                currentOffset = 0;
-                loadSales();
-            });
-            
-            // Sale detail modal
-            document.getElementById('btn-close-sale-detail').addEventListener('click', () => {
-                document.getElementById('sale-detail-modal').style.display = 'none';
-            });
-            document.getElementById('btn-close-sale-detail-footer').addEventListener('click', () => {
-                document.getElementById('sale-detail-modal').style.display = 'none';
-            });
-            document.getElementById('sale-detail-modal').addEventListener('click', (e) => {
-                if (e.target.id === 'sale-detail-modal') {
-                    document.getElementById('sale-detail-modal').style.display = 'none';
-                }
-            });
-            
-            // Settings modal (เปิดจาก branch menu ของ Dashboard)
-            const settingsModal = document.getElementById('settings-modal');
-            const btnOpenSettings = document.getElementById('btn-open-settings');
-            const btnCloseSettings = document.getElementById('btn-close-settings');
-            const btnCancelSettings = document.getElementById('btn-cancel-settings');
-            const btnSaveSettings = document.getElementById('btn-save-settings');
-            const settingsTabs = document.querySelectorAll('.settings-tab');
-            const settingsContents = document.querySelectorAll('.settings-content');
-            
-            btnOpenSettings.addEventListener('click', async (e) => {
-                e.preventDefault();
-                settingsModal.style.display = 'flex';
-                await loadSettings();
-            });
-            
-            btnCloseSettings.addEventListener('click', () => settingsModal.style.display = 'none');
-            btnCancelSettings.addEventListener('click', () => settingsModal.style.display = 'none');
-            settingsModal.addEventListener('click', (e) => {
-                if (e.target === settingsModal) settingsModal.style.display = 'none';
-            });
-            
-            settingsTabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const tabName = tab.dataset.tab;
-                    settingsTabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    settingsContents.forEach(c => c.style.display = 'none');
-                    document.getElementById(`tab-${tabName}`).style.display = 'block';
-                });
-            });
-            
-            btnSaveSettings.addEventListener('click', async () => {
-                const newSettings = {
-                    store_name: document.getElementById('setting-store-name').value,
-                    store_address: document.getElementById('setting-store-address').value,
-                    receipt_footer: document.getElementById('setting-receipt-footer').value,
-                    welcome_message: document.getElementById('setting-welcome-message').value,
-                    quick_items_per_row: document.getElementById('setting-quick-items-per-row').value,
-                    quick_items_count: document.getElementById('setting-quick-items-count').value,
-                    quick_items_days: document.getElementById('setting-quick-items-days').value
-                };
-                
-                try {
-                    const res = await fetch(`${API_BASE}/settings.php`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ settings: newSettings })
-                    });
-                    
-                    const data = await res.json();
-                    if (data.success) {
-                        alert('บันทึกการตั้งค่าสำเร็จ');
-                        settingsModal.style.display = 'none';
-                        await loadStoreName();
-                    } else {
-                        alert('เกิดข้อผิดพลาด: ' + data.message);
-                    }
-                } catch (error) {
-                    console.error('Error saving settings:', error);
-                    alert('ไม่สามารถบันทึกการตั้งค่าได้');
-                }
-            });
-        }
-        
-        async function loadSettings() {
-            try {
-                const res = await fetch(`${API_BASE}/settings.php`);
-                const data = await res.json();
-                if (data.success && data.data && data.data.settings) {
-                    const s = data.data.settings;
-                    document.getElementById('setting-store-name').value = s.store_name || '';
-                    document.getElementById('setting-store-address').value = s.store_address || '';
-                    document.getElementById('setting-receipt-footer').value = s.receipt_footer || '';
-                    document.getElementById('setting-welcome-message').value = s.welcome_message || '';
-                    document.getElementById('setting-quick-items-per-row').value = s.quick_items_per_row || '6';
-                    document.getElementById('setting-quick-items-count').value = s.quick_items_count || '30';
-                    document.getElementById('setting-quick-items-days').value = s.quick_items_days || '30';
-                }
-            } catch (error) {
-                console.error('Error loading settings:', error);
-            }
-        }
-    </script>
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/sales.js"></script>
 </body>
 </html>
