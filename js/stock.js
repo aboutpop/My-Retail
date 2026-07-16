@@ -4,6 +4,24 @@
  */
 
 // ========================================
+// Thai to Number Mapping (Barcode Scanner)
+// ========================================
+const THAI_TO_NUMBER = {
+    'ๅ': '1', '/': '2', '-': '3', 'ภ': '4', 'ถ': '5',
+    'ุ': '6', 'ึ': '7', 'ค': '8', 'ต': '9', 'จ': '0'
+};
+
+function convertThaiToNumber(text) {
+    const normalized = text.normalize('NFD');
+    let result = '';
+    for (let char of normalized) {
+        if (/[0-9]/.test(char)) result += char;
+        else if (THAI_TO_NUMBER[char]) result += THAI_TO_NUMBER[char];
+    }
+    return result;
+}
+
+// ========================================
 // Global Variables
 // ========================================
 let allProducts = [];
@@ -535,17 +553,21 @@ function focusBarcodeInput() {
     }, 100);
 }
 
+// ✅ แก้ไขแล้ว: ใช้ convertThaiToNumber สำหรับ barcode scanner
 async function handleBarcodeScan(barcode) {
     if (!barcode) return;
     
-    const product = allProducts.find(p => p.barcode === barcode);
+    // ✅ แปลงภาษาไทยเป็นตัวเลข
+    const convertedBarcode = convertThaiToNumber(barcode);
+    
+    const product = allProducts.find(p => p.barcode === convertedBarcode);
     
     if (product) {
         showProductDetail(product);
         const barcodeInput = document.getElementById('stock-in-barcode');
         if (barcodeInput) barcodeInput.value = '';
     } else {
-        showBarcodeNotFoundModal(barcode);
+        showBarcodeNotFoundModal(convertedBarcode);
         const barcodeInput = document.getElementById('stock-in-barcode');
         if (barcodeInput) barcodeInput.value = '';
     }
@@ -716,7 +738,7 @@ function setupEventListeners() {
         });
     });
     
-    // Barcode input
+    // ✅ Barcode input - ใช้ convertThaiToNumber
     const barcodeInput = document.getElementById('stock-in-barcode');
     if (barcodeInput) {
         barcodeInput.addEventListener('keydown', (e) => {
@@ -724,6 +746,7 @@ function setupEventListeners() {
                 e.preventDefault();
                 const barcode = barcodeInput.value.trim();
                 if (barcode) {
+                    // ✅ ส่ง barcode ที่ยังไม่ได้แปลงไปให้ handleBarcodeScan แปลงเอง
                     handleBarcodeScan(barcode);
                 }
             }
@@ -859,7 +882,7 @@ function setupEventListeners() {
     const btnSaveSettings = document.getElementById('btn-save-settings');
     const settingsTabs = document.querySelectorAll('.settings-tab');
     const settingsContents = document.querySelectorAll('.settings-content');
-
+    
     if (btnOpenSettings) {
         btnOpenSettings.addEventListener('click', async (e) => {
             e.preventDefault();
@@ -867,25 +890,25 @@ function setupEventListeners() {
             await loadSettingsForModal();
         });
     }
-
+    
     if (btnCloseSettings) {
         btnCloseSettings.addEventListener('click', () => {
             if (settingsModal) settingsModal.style.display = 'none';
         });
     }
-
+    
     if (btnCancelSettings) {
         btnCancelSettings.addEventListener('click', () => {
             if (settingsModal) settingsModal.style.display = 'none';
         });
     }
-
+    
     if (settingsModal) {
         settingsModal.addEventListener('click', (e) => {
             if (e.target === settingsModal) settingsModal.style.display = 'none';
         });
     }
-
+    
     settingsTabs.forEach(tab => {
         tab.addEventListener('click', () => {
             const tabName = tab.dataset.tab;
@@ -896,7 +919,7 @@ function setupEventListeners() {
             if (tabContent) tabContent.style.display = 'block';
         });
     });
-
+    
     if (btnSaveSettings) {
         btnSaveSettings.addEventListener('click', async () => {
             const settingStoreName = document.getElementById('setting-store-name');
@@ -916,7 +939,7 @@ function setupEventListeners() {
                 quick_items_count: settingQuickItemsCount ? settingQuickItemsCount.value : '30',
                 quick_items_days: settingQuickItemsDays ? settingQuickItemsDays.value : '30'
             };
-
+            
             try {
                 const res = await apiPut(API_CONFIG.ENDPOINTS.SETTINGS, { settings: newSettings });
                 

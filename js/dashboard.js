@@ -30,7 +30,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 function setCurrentDate() {
     const now = new Date();
     const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-    document.getElementById('current-date').textContent = now.toLocaleDateString('th-TH', options);
+    const dateElement = document.getElementById('current-date');
+    if (dateElement) {
+        dateElement.textContent = now.toLocaleDateString('th-TH', options);
+    }
 }
 
 async function loadStoreName() {
@@ -38,7 +41,10 @@ async function loadStoreName() {
         const res = await apiGet(API_CONFIG.ENDPOINTS.SETTINGS, { key: 'store_name' });
         if (res.success && res.data && res.data.settings) {
             const storeName = res.data.settings.store_name || 'ร้านค้า';
-            document.getElementById('store-name').textContent = storeName;
+            const storeNameElement = document.getElementById('store-name');
+            if (storeNameElement) {
+                storeNameElement.textContent = storeName;
+            }
             document.title = `Dashboard - ${storeName}`;
         }
     } catch (error) {
@@ -56,20 +62,31 @@ async function loadStats() {
         
         if (productsRes.success && productsRes.data && productsRes.data.products) {
             const products = productsRes.data.products;
+            
+            // Card 1: สินค้าทั้งหมด
             document.getElementById('stat-total-products').textContent = products.length.toLocaleString();
             
-            const lowStock = products.filter(p => parseInt(p.stock || 0) < 10 && parseInt(p.stock || 0) >= 0).length;
+            // Card 3: สินค้าสต็อกต่ำ (ไม่รวม no_stock_count)
+            const lowStock = products.filter(p => 
+                !p.no_stock_count && 
+                parseInt(p.stock || 0) < 10 && 
+                parseInt(p.stock || 0) >= 0
+            ).length;
             document.getElementById('stat-low-stock').textContent = lowStock.toLocaleString();
             
+            // Card 8: มูลค่าสต็อกทั้งร้าน
             const totalInventory = products.reduce((sum, p) => {
                 return sum + (parseFloat(p.cost || 0) * parseInt(p.stock || 0));
             }, 0);
             document.getElementById('stat-total-inventory').textContent = `฿${totalInventory.toFixed(2)}`;
         }
 
-        // Load today's sales
+        // Card 2 & 4: ยอดขายวันนี้ + บิลวันนี้
         const today = new Date().toISOString().split('T')[0];
-        const todayRes = await apiGet(API_CONFIG.ENDPOINTS.SALES, { date_from: today, date_to: today });
+        const todayRes = await apiGet(API_CONFIG.ENDPOINTS.SALES, { 
+            date_from: today, 
+            date_to: today 
+        });
         
         if (todayRes.success && todayRes.data && todayRes.data.summary) {
             const summary = todayRes.data.summary;
@@ -77,23 +94,29 @@ async function loadStats() {
             document.getElementById('stat-today-bills').textContent = summary.bill_count || 0;
         }
 
-        // Load weekly sales (7 days)
+        // Card 5: รายการขาย 7 วัน
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
         const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
         
-        const weeklyRes = await apiGet(API_CONFIG.ENDPOINTS.SALES, { date_from: sevenDaysAgoStr, date_to: today });
+        const weeklyRes = await apiGet(API_CONFIG.ENDPOINTS.SALES, { 
+            date_from: sevenDaysAgoStr, 
+            date_to: today 
+        });
         
         if (weeklyRes.success && weeklyRes.data && weeklyRes.data.summary) {
             document.getElementById('stat-weekly-bills').textContent = weeklyRes.data.summary.bill_count || 0;
         }
 
-        // Load monthly sales
+        // Card 6 & 7: ยอดขายเดือนนี้ + กำไรเดือนนี้
         const firstDayOfMonth = new Date();
         firstDayOfMonth.setDate(1);
         const firstDayStr = firstDayOfMonth.toISOString().split('T')[0];
         
-        const monthlyRes = await apiGet(API_CONFIG.ENDPOINTS.SALES, { date_from: firstDayStr, date_to: today });
+        const monthlyRes = await apiGet(API_CONFIG.ENDPOINTS.SALES, { 
+            date_from: firstDayStr, 
+            date_to: today 
+        });
         
         if (monthlyRes.success && monthlyRes.data && monthlyRes.data.summary) {
             const summary = monthlyRes.data.summary;
@@ -110,25 +133,33 @@ async function loadStats() {
 // ========================================
 async function loadTopProducts() {
     try {
-        const res = await apiGet(API_CONFIG.ENDPOINTS.PRODUCTS, { top_selling: 10, days: 30 });
+        const res = await apiGet(API_CONFIG.ENDPOINTS.PRODUCTS, { 
+            top_selling: 10, 
+            days: 30 
+        });
         
         if (res.success && res.data && res.data.products) {
             const products = res.data.products;
             const tbody = document.getElementById('top-products-table');
+            
+            if (!tbody) return;
             
             if (products.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">ยังไม่มีข้อมูลการขาย</td></tr>';
                 return;
             }
             
-            tbody.innerHTML = products.slice(0, 10).map((p, index) => `
-                <tr>
-                    <td><strong>#${index + 1}</strong></td>
-                    <td>${escapeHtml(p.name)}</td>
-                    <td style="text-align: right;">${p.total_sold || 0}</td>
-                    <td style="text-align: right;">฿${((p.total_sold || 0) * parseFloat(p.price)).toFixed(2)}</td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = products.slice(0, 10).map((p, index) => {
+                const totalSales = p.total_sales || (p.total_sold * parseFloat(p.price || 0));
+                return `
+                    <tr>
+                        <td><strong>#${index + 1}</strong></td>
+                        <td>${escapeHtml(p.name)}</td>
+                        <td style="text-align: right;">${p.total_sold || 0}</td>
+                        <td style="text-align: right;">${formatMoney(totalSales)}</td>
+                    </tr>
+                `;
+            }).join('');
         }
     } catch (error) {
         console.error('Error loading top products:', error);
@@ -163,11 +194,17 @@ async function loadTopProfitProducts() {
         });
         
         // Load all sales for this month
-        const salesRes = await apiGet(API_CONFIG.ENDPOINTS.SALES, { date_from: firstDayStr, date_to: today, limit: 10000 });
+        const salesRes = await apiGet(API_CONFIG.ENDPOINTS.SALES, { 
+            date_from: firstDayStr, 
+            date_to: today, 
+            limit: 10000 
+        });
         
         if (!salesRes.success || !salesRes.data || !salesRes.data.sales) {
-            document.getElementById('top-profit-table').innerHTML = 
-                '<tr><td colspan="4" class="text-center text-muted">ยังไม่มีข้อมูลการขาย</td></tr>';
+            const tbody = document.getElementById('top-profit-table');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">ยังไม่มีข้อมูลการขาย</td></tr>';
+            }
             return;
         }
         
@@ -209,6 +246,7 @@ async function loadTopProfitProducts() {
             .slice(0, 10);
         
         const tbody = document.getElementById('top-profit-table');
+        if (!tbody) return;
         
         if (sorted.length === 0) {
             tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">ยังไม่มีข้อมูลกำไร</td></tr>';
@@ -220,14 +258,16 @@ async function loadTopProfitProducts() {
                 <td><strong>#${index + 1}</strong></td>
                 <td>${escapeHtml(p.name)}</td>
                 <td style="text-align: right;">${p.quantity.toFixed(0)}</td>
-                <td style="text-align: right; color: var(--success); font-weight: bold;">฿${p.profit.toFixed(2)}</td>
+                <td style="text-align: right; color: var(--success); font-weight: bold;">${formatMoney(p.profit)}</td>
             </tr>
         `).join('');
         
     } catch (error) {
         console.error('Error loading top profit products:', error);
-        document.getElementById('top-profit-table').innerHTML = 
-            '<tr><td colspan="4" class="text-center text-danger">เกิดข้อผิดพลาด</td></tr>';
+        const tbody = document.getElementById('top-profit-table');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">เกิดข้อผิดพลาด</td></tr>';
+        }
     }
 }
 
@@ -241,6 +281,8 @@ async function loadRecentSales() {
         if (res.success && res.data && res.data.sales) {
             const sales = res.data.sales;
             const tbody = document.getElementById('recent-sales-table');
+            
+            if (!tbody) return;
             
             if (sales.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">ยังไม่มีข้อมูลการขาย</td></tr>';
@@ -266,9 +308,9 @@ async function loadRecentSales() {
                     <tr>
                         <td><strong>${escapeHtml(sale.bill_no)}</strong></td>
                         <td>${date}</td>
-                        <td style="text-align: right;">฿${parseFloat(sale.total_amount).toFixed(2)}</td>
-                        <td style="text-align: right;">฿${parseFloat(sale.discount).toFixed(2)}</td>
-                        <td style="text-align: right; font-weight: bold;">฿${parseFloat(sale.net_total).toFixed(2)}</td>
+                        <td style="text-align: right;">${formatMoney(sale.total_amount)}</td>
+                        <td style="text-align: right;">${formatMoney(sale.discount)}</td>
+                        <td style="text-align: right; font-weight: bold;">${formatMoney(sale.net_total)}</td>
                         <td>${paymentMethods[sale.payment_method] || sale.payment_method}</td>
                     </tr>
                 `;
@@ -284,13 +326,13 @@ async function loadRecentSales() {
 // ========================================
 async function loadSalesChart() {
     try {
-        const period = document.getElementById('chart-period').value;
+        const period = document.getElementById('chart-period')?.value || '7days';
         const today = new Date();
         let startDate, endDate;
         
         if (period === 'custom') {
-            const fromVal = document.getElementById('chart-date-from').value;
-            const toVal = document.getElementById('chart-date-to').value;
+            const fromVal = document.getElementById('chart-date-from')?.value;
+            const toVal = document.getElementById('chart-date-to')?.value;
             
             if (!fromVal || !toVal) {
                 showToast('กรุณาเลือกช่วงเวลา', 'warning');
@@ -312,9 +354,9 @@ async function loadSalesChart() {
         const dateFrom = startDate.toISOString().split('T')[0];
         const dateTo = endDate.toISOString().split('T')[0];
         
-        console.log('Loading chart data:', { dateFrom, dateTo, period });
+        console.log('📊 Loading chart data:', { dateFrom, dateTo, period });
         
-        // ✅ ใช้ reports.php?type=daily_summary ดึงข้อมูลทั้งช่วงใน call เดียว
+        // ใช้ reports.php?type=daily_summary ดึงข้อมูลทั้งช่วงใน call เดียว
         const res = await apiGet(API_CONFIG.ENDPOINTS.REPORTS, {
             type: 'daily_summary',
             date_from: dateFrom,
@@ -322,14 +364,14 @@ async function loadSalesChart() {
         });
         
         if (!res.success) {
-            console.error('Error loading chart data:', res.message);
+            console.error('❌ Error loading chart data:', res.message);
             showToast('ไม่สามารถโหลดข้อมูลกราฟได้', 'error');
             return;
         }
         
         const dailyData = res.data.data || [];
         
-        console.log('Chart data received:', dailyData);
+        console.log(`📥 API returned ${dailyData.length} records`);
         
         // สร้าง map ของข้อมูลที่ได้รับ
         const dataMap = {};
@@ -357,11 +399,12 @@ async function loadSalesChart() {
             currentDate.setDate(currentDate.getDate() + 1);
         }
         
-        console.log('Chart labels:', labels);
-        console.log('Sales data:', salesData);
-        console.log('Profit data:', profitData);
+        console.log(`✅ Chart ready: ${labels.length} days`);
+        console.log('📈 Sales:', salesData);
+        console.log('💰 Profit:', profitData);
         
-        const ctx = document.getElementById('salesChart').getContext('2d');
+        const ctx = document.getElementById('salesChart');
+        if (!ctx) return;
         
         if (salesChart) {
             salesChart.destroy();
@@ -426,7 +469,7 @@ async function loadSalesChart() {
             }
         });
     } catch (error) {
-        console.error('Error loading sales chart:', error);
+        console.error('❌ Error loading sales chart:', error);
         showToast('เกิดข้อผิดพลาดในการโหลดกราฟ', 'error');
     }
 }
@@ -436,17 +479,23 @@ async function loadSalesChart() {
 // ========================================
 function setupEventListeners() {
     // Chart period selector
-    document.getElementById('chart-period').addEventListener('change', (e) => {
-        const dateRange = document.getElementById('chart-date-range');
-        if (e.target.value === 'custom') {
-            dateRange.style.display = 'flex';
-        } else {
-            dateRange.style.display = 'none';
-            loadSalesChart();
-        }
-    });
+    const chartPeriod = document.getElementById('chart-period');
+    if (chartPeriod) {
+        chartPeriod.addEventListener('change', (e) => {
+            const dateRange = document.getElementById('chart-date-range');
+            if (e.target.value === 'custom') {
+                if (dateRange) dateRange.style.display = 'flex';
+            } else {
+                if (dateRange) dateRange.style.display = 'none';
+                loadSalesChart();
+            }
+        });
+    }
     
-    document.getElementById('btn-update-chart').addEventListener('click', loadSalesChart);
+    const btnUpdateChart = document.getElementById('btn-update-chart');
+    if (btnUpdateChart) {
+        btnUpdateChart.addEventListener('click', loadSalesChart);
+    }
     
     // Settings modal
     const settingsModal = document.getElementById('settings-modal');
@@ -456,55 +505,80 @@ function setupEventListeners() {
     const btnSaveSettings = document.getElementById('btn-save-settings');
     const settingsTabs = document.querySelectorAll('.settings-tab');
     const settingsContents = document.querySelectorAll('.settings-content');
-
-    btnOpenSettings.addEventListener('click', async (e) => {
-        e.preventDefault();
-        settingsModal.style.display = 'flex';
-        await loadSettings();
-    });
-
-    btnCloseSettings.addEventListener('click', () => settingsModal.style.display = 'none');
-    btnCancelSettings.addEventListener('click', () => settingsModal.style.display = 'none');
-    settingsModal.addEventListener('click', (e) => {
-        if (e.target === settingsModal) settingsModal.style.display = 'none';
-    });
-
+    
+    if (btnOpenSettings) {
+        btnOpenSettings.addEventListener('click', async (e) => {
+            e.preventDefault();
+            if (settingsModal) settingsModal.style.display = 'flex';
+            await loadSettings();
+        });
+    }
+    
+    if (btnCloseSettings) {
+        btnCloseSettings.addEventListener('click', () => {
+            if (settingsModal) settingsModal.style.display = 'none';
+        });
+    }
+    
+    if (btnCancelSettings) {
+        btnCancelSettings.addEventListener('click', () => {
+            if (settingsModal) settingsModal.style.display = 'none';
+        });
+    }
+    
+    if (settingsModal) {
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) settingsModal.style.display = 'none';
+        });
+    }
+    
     settingsTabs.forEach(tab => {
         tab.addEventListener('click', () => {
             const tabName = tab.dataset.tab;
             settingsTabs.forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             settingsContents.forEach(c => c.style.display = 'none');
-            document.getElementById(`tab-${tabName}`).style.display = 'block';
+            const tabContent = document.getElementById(`tab-${tabName}`);
+            if (tabContent) tabContent.style.display = 'block';
         });
     });
-
-    btnSaveSettings.addEventListener('click', async () => {
-        const newSettings = {
-            store_name: document.getElementById('setting-store-name').value,
-            store_address: document.getElementById('setting-store-address').value,
-            receipt_footer: document.getElementById('setting-receipt-footer').value,
-            welcome_message: document.getElementById('setting-welcome-message').value,
-            quick_items_per_row: document.getElementById('setting-quick-items-per-row').value,
-            quick_items_count: document.getElementById('setting-quick-items-count').value,
-            quick_items_days: document.getElementById('setting-quick-items-days').value
-        };
-
-        try {
-            const res = await apiPut(API_CONFIG.ENDPOINTS.SETTINGS, { settings: newSettings });
+    
+    if (btnSaveSettings) {
+        btnSaveSettings.addEventListener('click', async () => {
+            const settingStoreName = document.getElementById('setting-store-name');
+            const settingStoreAddress = document.getElementById('setting-store-address');
+            const settingReceiptFooter = document.getElementById('setting-receipt-footer');
+            const settingWelcomeMessage = document.getElementById('setting-welcome-message');
+            const settingQuickItemsPerRow = document.getElementById('setting-quick-items-per-row');
+            const settingQuickItemsCount = document.getElementById('setting-quick-items-count');
+            const settingQuickItemsDays = document.getElementById('setting-quick-items-days');
             
-            if (res.success) {
-                showToast('บันทึกการตั้งค่าสำเร็จ', 'success');
-                settingsModal.style.display = 'none';
-                await loadStoreName();
-            } else {
-                showToast('เกิดข้อผิดพลาด: ' + res.message, 'error');
+            const newSettings = {
+                store_name: settingStoreName ? settingStoreName.value : '',
+                store_address: settingStoreAddress ? settingStoreAddress.value : '',
+                receipt_footer: settingReceiptFooter ? settingReceiptFooter.value : '',
+                welcome_message: settingWelcomeMessage ? settingWelcomeMessage.value : '',
+                quick_items_per_row: settingQuickItemsPerRow ? settingQuickItemsPerRow.value : '6',
+                quick_items_count: settingQuickItemsCount ? settingQuickItemsCount.value : '30',
+                quick_items_days: settingQuickItemsDays ? settingQuickItemsDays.value : '30'
+            };
+            
+            try {
+                const res = await apiPut(API_CONFIG.ENDPOINTS.SETTINGS, { settings: newSettings });
+                
+                if (res.success) {
+                    showToast('บันทึกการตั้งค่าสำเร็จ', 'success');
+                    if (settingsModal) settingsModal.style.display = 'none';
+                    await loadStoreName();
+                } else {
+                    showToast('เกิดข้อผิดพลาด: ' + res.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showToast('ไม่สามารถบันทึกการตั้งค่าได้', 'error');
             }
-        } catch (error) {
-            console.error('Error saving settings:', error);
-            showToast('ไม่สามารถบันทึกการตั้งค่าได้', 'error');
-        }
-    });
+        });
+    }
 }
 
 // ========================================
@@ -516,13 +590,22 @@ async function loadSettings() {
         
         if (res.success && res.data && res.data.settings) {
             const s = res.data.settings;
-            document.getElementById('setting-store-name').value = s.store_name || '';
-            document.getElementById('setting-store-address').value = s.store_address || '';
-            document.getElementById('setting-receipt-footer').value = s.receipt_footer || '';
-            document.getElementById('setting-welcome-message').value = s.welcome_message || '';
-            document.getElementById('setting-quick-items-per-row').value = s.quick_items_per_row || '6';
-            document.getElementById('setting-quick-items-count').value = s.quick_items_count || '30';
-            document.getElementById('setting-quick-items-days').value = s.quick_items_days || '30';
+            
+            const settingStoreName = document.getElementById('setting-store-name');
+            const settingStoreAddress = document.getElementById('setting-store-address');
+            const settingReceiptFooter = document.getElementById('setting-receipt-footer');
+            const settingWelcomeMessage = document.getElementById('setting-welcome-message');
+            const settingQuickItemsPerRow = document.getElementById('setting-quick-items-per-row');
+            const settingQuickItemsCount = document.getElementById('setting-quick-items-count');
+            const settingQuickItemsDays = document.getElementById('setting-quick-items-days');
+            
+            if (settingStoreName) settingStoreName.value = s.store_name || '';
+            if (settingStoreAddress) settingStoreAddress.value = s.store_address || '';
+            if (settingReceiptFooter) settingReceiptFooter.value = s.receipt_footer || '';
+            if (settingWelcomeMessage) settingWelcomeMessage.value = s.welcome_message || '';
+            if (settingQuickItemsPerRow) settingQuickItemsPerRow.value = s.quick_items_per_row || '6';
+            if (settingQuickItemsCount) settingQuickItemsCount.value = s.quick_items_count || '30';
+            if (settingQuickItemsDays) settingQuickItemsDays.value = s.quick_items_days || '30';
         }
     } catch (error) {
         console.error('Error loading settings:', error);

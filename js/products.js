@@ -4,6 +4,24 @@
  */
 
 // ========================================
+// Thai to Number Mapping (Barcode Scanner)
+// ========================================
+const THAI_TO_NUMBER = {
+    'ๅ': '1', '/': '2', '-': '3', 'ภ': '4', 'ถ': '5',
+    'ุ': '6', 'ึ': '7', 'ค': '8', 'ต': '9', 'จ': '0'
+};
+
+function convertThaiToNumber(text) {
+    const normalized = text.normalize('NFD');
+    let result = '';
+    for (let char of normalized) {
+        if (/[0-9]/.test(char)) result += char;
+        else if (THAI_TO_NUMBER[char]) result += THAI_TO_NUMBER[char];
+    }
+    return result;
+}
+
+// ========================================
 // Global Variables
 // ========================================
 let allProducts = [];
@@ -238,6 +256,7 @@ function getStockBadgeClass(stock) {
     if (stockNum < 10) return 'badge-warning';
     return 'badge-success';
 }
+
 // ========================================
 // Product CRUD Operations
 // ========================================
@@ -387,11 +406,11 @@ function setupEventListeners() {
             renderProducts();
         }, 300));
         
-        // Barcode scanner (Enter key)
+        // ✅ Barcode scanner (Enter key) - ใช้ convertThaiToNumber
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                const barcode = e.target.value.trim();
+                const barcode = convertThaiToNumber(e.target.value.trim()); // ✅ แปลงภาษาไทยเป็นเลข
                 if (barcode) {
                     const product = allProducts.find(p => p.barcode === barcode);
                     if (product) {
@@ -399,6 +418,7 @@ function setupEventListeners() {
                         searchInput.value = '';
                     } else {
                         showToast('ไม่พบสินค้าที่มีบาร์โค้ดนี้', 'warning');
+                        searchInput.value = '';
                     }
                 }
             }
