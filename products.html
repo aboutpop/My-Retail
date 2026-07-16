@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html lang="th">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>จัดการสินค้า - POS & Stock Retail Manager</title>
     <link rel="stylesheet" href="css/fonts.css">
     <link rel="stylesheet" href="assets/css/all.min.css">
+    <link rel="stylesheet" href="css/common.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -40,9 +39,9 @@
         <!-- Topbar -->
         <header class="topbar">
             <h1><i class="fas fa-box"></i> จัดการสินค้า</h1>
-            <div style="display: flex; align-items: center; gap: 16px;">
-                <span id="store-name" style="color: var(--text-muted); font-size: 0.9rem; font-weight: 500;"></span>
-                <span id="current-date" style="color: var(--text-muted); font-size: 0.9rem;"></span>
+            <div class="flex gap-2">
+                <span id="store-name" class="text-muted" style="font-size: 0.9rem; font-weight: 500;"></span>
+                <span id="current-date" class="text-muted" style="font-size: 0.9rem;"></span>
             </div>
         </header>
 
@@ -56,7 +55,7 @@
                             <i class="fas fa-box"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 id="stat-total-products">0</h3>
+                            <h3 id="stat-total">0</h3>
                             <p>สินค้าทั้งหมด</p>
                         </div>
                     </div>
@@ -67,7 +66,7 @@
                             <i class="fas fa-check-circle"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 id="stat-active-products">0</h3>
+                            <h3 id="stat-in-stock">0</h3>
                             <p>สินค้าที่มีสต็อก</p>
                         </div>
                     </div>
@@ -96,71 +95,61 @@
                 </div>
             </div>
 
-            <!-- Scan Section (เหมือน stock.html) -->
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <input type="text" id="search-input" class="grow" placeholder="🔍 สแกนบาร์โค้ดหรือค้นหาชื่อสินค้า...">
+                <select id="category-filter">
+                    <option value="all">ทุกหมวดหมู่</option>
+                </select>
+                <select id="stock-filter">
+                    <option value="all">ทุกสถานะสต็อก</option>
+                    <option value="in-stock">มีสต็อก</option>
+                    <option value="low-stock">สต็อกต่ำ (&lt;10)</option>
+                    <option value="out-of-stock">หมดสต็อก</option>
+                </select>
+                <button class="btn btn-outline" id="btn-clear-filters">
+                    <i class="fas fa-times"></i> ล้างฟิลเตอร์
+                </button>
+                <button class="btn btn-primary" id="btn-add-product">
+                    <i class="fas fa-plus"></i> เพิ่มสินค้าใหม่
+                </button>
+            </div>
+
+            <!-- Products Table -->
             <div class="card">
-                <div class="scan-section">
-                    <div class="scan-field" style="flex: 2;">
-                        <label><i class="fas fa-barcode"></i> สแกนบาร์โค้ดสินค้า</label>
-                        <input type="text" id="product-barcode" placeholder="สแกนหรือพิมพ์บาร์โค้ด แล้วกด Enter"
-                            autocomplete="off">
-                    </div>
-                    <div class="scan-field">
-                        <label><i class="fas fa-search"></i> ค้นหาชื่อสินค้า</label>
-                        <input type="text" id="product-search" placeholder="พิมพ์ชื่อสินค้า..." autocomplete="off">
-                        <div class="search-results" id="product-search-results"></div>
-                    </div>
-                    <button class="btn btn-primary" id="btn-add-product">
-                        <i class="fas fa-plus"></i> เพิ่มสินค้าใหม่
-                    </button>
-                </div>
-
-                <!-- Filters -->
-                <div class="toolbar">
-                    <select id="category-filter" class="form-control">
-                        <option value="">ทุกหมวดหมู่</option>
-                    </select>
-                    <select id="stock-filter" class="form-control">
-                        <option value="">ทุกสถานะสต็อก</option>
-                        <option value="in-stock">มีสต็อก</option>
-                        <option value="low-stock">สต็อกต่ำ (&lt;10)</option>
-                        <option value="out-of-stock">หมดสต็อก</option>
-                    </select>
-                    <button class="btn btn-outline" id="btn-reset-filters">
-                        <i class="fas fa-times"></i> ล้างฟิลเตอร์
-                    </button>
-                </div>
-
-                <!-- Products Table with Sort -->
                 <div class="table-container">
-                    <table class="table" id="products-table">
+                    <table class="table">
                         <thead>
                             <tr>
-                                <th>บาร์โค้ด</th>
+                                <th class="sortable" data-sort="barcode">
+                                    บาร์โค้ด <i class="fas fa-sort"></i>
+                                </th>
                                 <th class="sortable" data-sort="name">
                                     ชื่อสินค้า <i class="fas fa-sort"></i>
                                 </th>
-                                <th>หมวดหมู่</th>
-                                <th style="text-align: right;">ราคาขาย</th>
-                                <th style="text-align: right;">ต้นทุน</th>
+                                <th class="sortable" data-sort="category_name">
+                                    หมวดหมู่ <i class="fas fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="price">
+                                    ราคาขาย <i class="fas fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="cost">
+                                    ต้นทุน <i class="fas fa-sort"></i>
+                                </th>
                                 <th class="sortable" data-sort="stock">
                                     สต็อก <i class="fas fa-sort"></i>
                                 </th>
-                                <th class="sortable" data-sort="unit">
-                                    หน่วย <i class="fas fa-sort"></i>
-                                </th>
+                                <th>หน่วย</th>
                                 <th style="text-align: center;">จัดการ</th>
                             </tr>
                         </thead>
-                        <tbody id="products-tbody">
+                        <tbody id="products-table">
                             <tr>
                                 <td colspan="8" class="text-center text-muted">กำลังโหลดข้อมูล...</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-
-                <!-- Pagination -->
-                <div class="pagination" id="pagination"></div>
             </div>
         </main>
     </div>
@@ -173,64 +162,64 @@
                 <button class="modal-close" id="btn-close-modal">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="product-form">
+                <form id="product-form" class="modal-form">
                     <input type="hidden" id="product-id">
-
-                    <div class="form-group">
-                        <label class="form-label">บาร์โค้ด <span style="color: var(--danger);">*</span></label>
-                        <input type="text" class="form-control" id="form-barcode" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">ชื่อสินค้า <span style="color: var(--danger);">*</span></label>
-                        <input type="text" class="form-control" id="form-name" required>
-                    </div>
-
-                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    
+                    <div class="grid grid-cols-2">
                         <div class="form-group">
-                            <label class="form-label">ราคาขาย <span style="color: var(--danger);">*</span></label>
-                            <input type="number" class="form-control" id="form-price" step="0.01" min="0" required>
+                            <label class="form-label">บาร์โค้ด <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="product-barcode" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ชื่อสินค้า <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="product-name" required>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2">
+                        <div class="form-group">
+                            <label class="form-label">ราคาขาย <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="product-price" required min="0" step="0.01">
                         </div>
                         <div class="form-group">
                             <label class="form-label">ต้นทุน</label>
-                            <input type="number" class="form-control" id="form-cost" step="0.01" min="0" value="0">
+                            <input type="number" class="form-control" id="product-cost" min="0" step="0.01" value="0">
                         </div>
                     </div>
 
-                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="grid grid-cols-2">
                         <div class="form-group">
                             <label class="form-label">สต็อก</label>
-                            <input type="number" class="form-control" id="form-stock" step="1" min="0" value="0">
+                            <input type="number" class="form-control" id="product-stock" min="0" value="0">
                         </div>
                         <div class="form-group">
                             <label class="form-label">หน่วย</label>
-                            <input type="text" class="form-control" id="form-unit" placeholder="เช่น ชิ้น, กล่อง">
+                            <input type="text" class="form-control" id="product-unit" placeholder="เช่น ชิ้น, กล่อง, ถุง" value="ชิ้น">
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">หมวดหมู่</label>
-                        <select class="form-control" id="form-category">
+                        <select class="form-control" id="product-category">
                             <option value="">-- เลือกหมวดหมู่ --</option>
                         </select>
                     </div>
 
-                    <!-- 🆕 Checkbox: ไม่นับสต๊อก -->
-                    <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem;">
-                        <input type="checkbox" id="form-no-stock" style="width: 18px; height: 18px; cursor: pointer;">
-                        <label for="form-no-stock" style="cursor: pointer; font-weight: 500;">
-                            <i class="fas fa-ban" style="color: var(--warning);"></i> ไม่นับสต๊อก (ไม่ตัดสต็อกเมื่อขาย)
+                    <div class="form-group">
+                        <label class="form-label">
+                            <input type="checkbox" id="product-no-stock-count">
+                            ไม่นับสต๊อก (ไม่ตัดสต็อกเมื่อขาย)
                         </label>
+                        <small class="text-muted">
+                            * หากเลือก สินค้าจะแสดงเป็น 0 ในสต็อก และไม่ถูกตัดเมื่อมีการขาย
+                            แต่ยังคงรายงานยอดขายและกำไรตามปกติ
+                        </small>
                     </div>
-                    <small style="color: var(--text-muted); display: block; margin-top: 0.3rem;">
-                        * หากเลือก สินค้าจะแสดงเป็น 0 ในสต็อก และไม่ถูกตัดเมื่อมีการขาย
-                        แต่ยังคงรายงานยอดขายและกำไรตามปกติ
-                    </small>
                 </form>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" id="btn-cancel-modal">ยกเลิก</button>
-                <button class="btn btn-primary" id="btn-save-product">
+                <button class="btn btn-success" id="btn-save-product">
                     <i class="fas fa-save"></i> บันทึก
                 </button>
             </div>
@@ -257,7 +246,7 @@
                 <div id="tab-main" class="settings-content">
                     <form id="form-main-settings">
                         <div class="form-group">
-                            <label class="form-label">ชื่อร้าน <span style="color: var(--danger);">*</span></label>
+                            <label class="form-label">ชื่อร้าน <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="setting-store-name" required>
                         </div>
                         <div class="form-group">
@@ -288,13 +277,11 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">จำนวนสินค้าขายดีที่แสดง</label>
-                            <input type="number" class="form-control" id="setting-quick-items-count" min="10" max="100"
-                                value="30">
+                            <input type="number" class="form-control" id="setting-quick-items-count" min="10" max="100" value="30">
                         </div>
                         <div class="form-group">
                             <label class="form-label">ระยะเวลาที่ย้อนดู (วัน)</label>
-                            <input type="number" class="form-control" id="setting-quick-items-days" min="7" max="365"
-                                value="30">
+                            <input type="number" class="form-control" id="setting-quick-items-days" min="7" max="365" value="30">
                         </div>
                     </form>
                 </div>
@@ -308,537 +295,9 @@
         </div>
     </div>
 
-    <script>
-        const API_BASE = window.location.pathname.includes('/myproject/') ? '/myproject/My-Retail/api' : '/api';
-
-        // Thai to Number Mapping
-        const THAI_TO_NUMBER = {
-            'ๅ': '1', '/': '2', '-': '3', 'ภ': '4', 'ถ': '5',
-            'ุ': '6',
-            'ึ': '7',
-            'ค': '8', 'ต': '9', 'จ': '0'
-        };
-
-        function convertThaiToNumber(text) {
-            const normalized = text.normalize('NFD');
-            let result = '';
-            for (let char of normalized) {
-                if (/[0-9]/.test(char)) result += char;
-                else if (THAI_TO_NUMBER[char]) result += THAI_TO_NUMBER[char];
-            }
-            return result;
-        }
-
-        // State
-        let allProducts = [];
-        let filteredProducts = [];
-        let categories = [];
-        let currentOffset = 0;
-        const limit = 20;
-        let sortField = null;
-        let sortDirection = 'asc';
-        let searchTimeout = null;
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', async () => {
-            setCurrentDate();
-            await loadStoreName();
-            await loadCategories();
-            await loadProducts();
-            setupEventListeners();
-
-            console.log('✅ Products Management initialized');
-        });
-
-        function setCurrentDate() {
-            const now = new Date();
-            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-            document.getElementById('current-date').textContent = now.toLocaleDateString('th-TH', options);
-        }
-
-        async function loadStoreName() {
-            try {
-                const res = await fetch(`${API_BASE}/settings.php?key=store_name`);
-                const data = await res.json();
-                if (data.success && data.data && data.data.settings) {
-                    const storeName = data.data.settings.store_name || 'ร้านค้า';
-                    document.getElementById('store-name').textContent = storeName;
-                    document.title = `จัดการสินค้า - ${storeName}`;
-                }
-            } catch (error) {
-                console.error('Error loading store name:', error);
-            }
-        }
-
-        async function loadCategories() {
-            try {
-                const res = await fetch(`${API_BASE}/categories.php`);
-                const data = await res.json();
-
-                if (data.success && data.data && data.data.categories) {
-                    categories = data.data.categories;
-
-                    // Populate category filter
-                    const categoryFilter = document.getElementById('category-filter');
-                    const formCategory = document.getElementById('form-category');
-
-                    categories.forEach(cat => {
-                        const option1 = document.createElement('option');
-                        option1.value = cat.id;
-                        option1.textContent = cat.name;
-                        categoryFilter.appendChild(option1);
-
-                        const option2 = document.createElement('option');
-                        option2.value = cat.id;
-                        option2.textContent = cat.name;
-                        formCategory.appendChild(option2);
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading categories:', error);
-            }
-        }
-
-        async function loadProducts() {
-            try {
-                const res = await fetch(`${API_BASE}/products.php?limit=10000`);
-                const data = await res.json();
-
-                if (data.success && data.data && data.data.products) {
-                    allProducts = data.data.products;
-                    applyFilters();
-                    updateStats();
-                }
-            } catch (error) {
-                console.error('Error loading products:', error);
-            }
-        }
-
-        function updateStats() {
-            const total = allProducts.length;
-            const inStock = allProducts.filter(p => parseInt(p.stock || 0) > 0).length;
-            const lowStock = allProducts.filter(p => parseInt(p.stock || 0) > 0 && parseInt(p.stock || 0) < 10).length;
-            const outOfStock = allProducts.filter(p => parseInt(p.stock || 0) <= 0).length;
-
-            document.getElementById('stat-total-products').textContent = total;
-            document.getElementById('stat-active-products').textContent = inStock;
-            document.getElementById('stat-low-stock').textContent = lowStock;
-            document.getElementById('stat-out-of-stock').textContent = outOfStock;
-        }
-
-        function applyFilters() {
-            const categoryId = document.getElementById('category-filter').value;
-            const stockStatus = document.getElementById('stock-filter').value;
-            const searchTerm = document.getElementById('product-search').value.toLowerCase();
-
-            filteredProducts = allProducts.filter(p => {
-                // Category filter
-                if (categoryId && p.category_id != categoryId) return false;
-
-                // Stock filter
-                const stock = parseInt(p.stock || 0);
-                if (stockStatus === 'in-stock' && stock <= 0) return false;
-                if (stockStatus === 'low-stock' && (stock <= 0 || stock >= 10)) return false;
-                if (stockStatus === 'out-of-stock' && stock > 0) return false;
-
-                // Search term
-                if (searchTerm && !p.name.toLowerCase().includes(searchTerm) &&
-                    !(p.barcode && p.barcode.includes(searchTerm))) {
-                    return false;
-                }
-
-                return true;
-            });
-
-            // Apply sort
-            if (sortField) {
-                filteredProducts.sort((a, b) => {
-                    let valA = a[sortField] || '';
-                    let valB = b[sortField] || '';
-
-                    if (sortField === 'stock' || sortField === 'price' || sortField === 'cost') {
-                        valA = parseFloat(valA) || 0;
-                        valB = parseFloat(valB) || 0;
-                    } else {
-                        valA = valA.toString().toLowerCase();
-                        valB = valB.toString().toLowerCase();
-                    }
-
-                    if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
-                    if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
-                    return 0;
-                });
-            }
-
-            currentOffset = 0;
-            renderProducts();
-        }
-
-        function renderProducts() {
-            const tbody = document.getElementById('products-tbody');
-            const start = currentOffset;
-            const end = Math.min(start + limit, filteredProducts.length);
-            const pageProducts = filteredProducts.slice(start, end);
-
-            if (pageProducts.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8" class="text-center text-muted">
-                            <i class="fas fa-inbox"></i> ไม่พบสินค้า
-                        </td>
-                    </tr>
-                `;
-                renderPagination(0);
-                return;
-            }
-
-            tbody.innerHTML = pageProducts.map(p => {
-                const stock = parseInt(p.stock || 0);
-                const stockClass = stock <= 0 ? 'text-danger' : stock < 10 ? 'text-warning' : 'text-success';
-                const categoryName = categories.find(c => c.id == p.category_id)?.name || '-';
-
-                return `
-                    <tr>
-                        <td><code>${p.barcode || '-'}</code></td>
-                        <td><strong>${p.name}</strong></td>
-                        <td>${categoryName}</td>
-                        <td style="text-align: right;">฿${parseFloat(p.price).toFixed(2)}</td>
-                        <td style="text-align: right;">฿${parseFloat(p.cost).toFixed(2)}</td>
-                        <td style="text-align: center;" class="${stockClass}"><strong>${stock}</strong></td>
-                        <td style="text-align: center;">${p.unit || '-'}</td>
-                        <td style="text-align: center;">
-                            <div class="btn-icon-group">
-                                <button class="btn-icon edit" onclick="editProduct(${p.id})" title="แก้ไข">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn-icon delete" onclick="deleteProduct(${p.id}, '${p.name}')" title="ลบ">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-
-            renderPagination(filteredProducts.length);
-        }
-
-        function renderPagination(total) {
-            const pagination = document.getElementById('pagination');
-            const totalPages = Math.ceil(total / limit);
-            const currentPage = Math.floor(currentOffset / limit) + 1;
-
-            if (totalPages <= 1) {
-                pagination.innerHTML = '';
-                return;
-            }
-
-            let html = '';
-            html += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">
-                <i class="fas fa-chevron-left"></i>
-            </button>`;
-
-            for (let i = 1; i <= totalPages; i++) {
-                if (i === currentPage) {
-                    html += `<button class="active">${i}</button>`;
-                } else if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-                    html += `<button onclick="goToPage(${i})">${i}</button>`;
-                } else if (i === currentPage - 3 || i === currentPage + 3) {
-                    html += `<button disabled>...</button>`;
-                }
-            }
-
-            html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">
-                <i class="fas fa-chevron-right"></i>
-            </button>`;
-
-            pagination.innerHTML = html;
-        }
-
-        function goToPage(page) {
-            currentOffset = (page - 1) * limit;
-            renderProducts();
-        }
-
-        function openModal(productId = null) {
-            const modal = document.getElementById('product-modal');
-            const title = document.getElementById('modal-title');
-            const form = document.getElementById('product-form');
-
-            if (productId) {
-                const product = allProducts.find(p => p.id === productId);
-                if (!product) return;
-
-                title.innerHTML = '<i class="fas fa-edit"></i> แก้ไขสินค้า';
-                document.getElementById('product-id').value = product.id;
-                document.getElementById('form-barcode').value = product.barcode || '';
-                document.getElementById('form-name').value = product.name;
-                document.getElementById('form-price').value = product.price;
-                document.getElementById('form-cost').value = product.cost || 0;
-                document.getElementById('form-stock').value = product.stock || 0;
-                document.getElementById('form-unit').value = product.unit || '';
-                document.getElementById('form-category').value = product.category_id || '';
-                document.getElementById('form-no-stock').checked = product.no_stock_count || false;
-            } else {
-                title.innerHTML = '<i class="fas fa-plus-circle"></i> เพิ่มสินค้าใหม่';
-                form.reset();
-                document.getElementById('product-id').value = '';
-                document.getElementById('form-no-stock').checked = false;
-            }
-
-            modal.style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('product-modal').style.display = 'none';
-        }
-
-        async function saveProduct() {
-            const id = document.getElementById('product-id').value;
-            const barcode = document.getElementById('form-barcode').value.trim();
-            const name = document.getElementById('form-name').value.trim();
-            const price = parseFloat(document.getElementById('form-price').value) || 0;
-            const cost = parseFloat(document.getElementById('form-cost').value) || 0;
-            const stock = parseInt(document.getElementById('form-stock').value) || 0;
-            const unit = document.getElementById('form-unit').value.trim();
-            const categoryId = document.getElementById('form-category').value;
-            const noStock = document.getElementById('form-no-stock').checked;
-
-            if (!barcode || !name) {
-                alert('กรุณากรอกบาร์โค้ดและชื่อสินค้า');
-                return;
-            }
-
-            if (price <= 0) {
-                alert('กรุณากรอกราคาขายมากกว่า 0');
-                return;
-            }
-
-            try {
-                const url = id ? `${API_BASE}/products.php` : `${API_BASE}/products.php`;
-                const method = id ? 'PUT' : 'POST';
-
-                const body = {
-                    name, barcode, price, cost, stock, unit,
-                    category_id: categoryId ? parseInt(categoryId) : null,
-                    category: '',
-                    no_stock_count: noStock
-                };
-
-                if (id) {
-                    body.id = parseInt(id);
-                }
-
-                const res = await fetch(url, {
-                    method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-
-                const data = await res.json();
-
-                if (data.success) {
-                    alert(id ? 'แก้ไขสินค้าสำเร็จ' : 'เพิ่มสินค้าสำเร็จ');
-                    closeModal();
-                    await loadProducts();
-                } else {
-                    alert('เกิดข้อผิดพลาด: ' + data.message);
-                }
-            } catch (error) {
-                console.error('Error saving product:', error);
-                alert('เกิดข้อผิดพลาดในการบันทึก');
-            }
-        }
-
-        async function deleteProduct(id, name) {
-            if (!confirm(`ต้องการลบสินค้า "${name}" หรือไม่?`)) {
-                return;
-            }
-
-            try {
-                const res = await fetch(`${API_BASE}/products.php`, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id })
-                });
-
-                const data = await res.json();
-
-                if (data.success) {
-                    alert('ลบสินค้าสำเร็จ');
-                    await loadProducts();
-                } else {
-                    alert('ไม่สามารถลบได้: ' + data.message);
-                }
-            } catch (error) {
-                console.error('Error deleting product:', error);
-                alert('เกิดข้อผิดพลาดในการลบ');
-            }
-        }
-
-        function editProduct(id) {
-            openModal(id);
-        }
-
-        function setupEventListeners() {
-            // Barcode scan (🆕 แปลงคีย์ภาษาไทยก่อน)
-            const barcodeInput = document.getElementById('product-barcode');
-            barcodeInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const barcode = convertThaiToNumber(barcodeInput.value.trim());
-                    if (barcode) {
-                        // ค้นหาสินค้าจากบาร์โค้ด
-                        const product = allProducts.find(p => p.barcode === barcode);
-                        if (product) {
-                            editProduct(product.id);
-                            barcodeInput.value = '';
-                        } else {
-                            alert('ไม่พบสินค้าที่มีบาร์โค้ดนี้');
-                        }
-                    }
-                }
-            });
-
-            // Name search
-            const searchInput = document.getElementById('product-search');
-            searchInput.addEventListener('input', (e) => {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    applyFilters();
-                }, 300);
-            });
-
-            // Category filter
-            document.getElementById('category-filter').addEventListener('change', applyFilters);
-
-            // Stock filter
-            document.getElementById('stock-filter').addEventListener('change', applyFilters);
-
-            // Reset filters
-            document.getElementById('btn-reset-filters').addEventListener('click', () => {
-                document.getElementById('category-filter').value = '';
-                document.getElementById('stock-filter').value = '';
-                document.getElementById('product-search').value = '';
-                applyFilters();
-            });
-
-            // Sort headers
-            document.querySelectorAll('.sortable').forEach(th => {
-                th.addEventListener('click', () => {
-                    const field = th.dataset.sort;
-
-                    if (sortField === field) {
-                        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-                    } else {
-                        sortField = field;
-                        sortDirection = 'asc';
-                    }
-
-                    // Update icons
-                    document.querySelectorAll('.sortable i').forEach(icon => {
-                        icon.className = 'fas fa-sort';
-                    });
-                    th.querySelector('i').className = `fas fa-sort-${sortDirection === 'asc' ? 'up' : 'down'}`;
-
-                    applyFilters();
-                });
-            });
-
-            // Add product button
-            document.getElementById('btn-add-product').addEventListener('click', () => openModal());
-
-            // Modal buttons
-            document.getElementById('btn-close-modal').addEventListener('click', closeModal);
-            document.getElementById('btn-cancel-modal').addEventListener('click', closeModal);
-            document.getElementById('btn-save-product').addEventListener('click', saveProduct);
-            document.getElementById('product-modal').addEventListener('click', (e) => {
-                if (e.target.id === 'product-modal') closeModal();
-            });
-
-            // Settings modal
-            const settingsModal = document.getElementById('settings-modal');
-            const btnOpenSettings = document.getElementById('btn-open-settings');
-            const btnCloseSettings = document.getElementById('btn-close-settings');
-            const btnCancelSettings = document.getElementById('btn-cancel-settings');
-            const btnSaveSettings = document.getElementById('btn-save-settings');
-            const settingsTabs = document.querySelectorAll('.settings-tab');
-            const settingsContents = document.querySelectorAll('.settings-content');
-
-            btnOpenSettings.addEventListener('click', async (e) => {
-                e.preventDefault();
-                settingsModal.style.display = 'flex';
-                await loadSettings();
-            });
-
-            btnCloseSettings.addEventListener('click', () => settingsModal.style.display = 'none');
-            btnCancelSettings.addEventListener('click', () => settingsModal.style.display = 'none');
-            settingsModal.addEventListener('click', (e) => {
-                if (e.target === settingsModal) settingsModal.style.display = 'none';
-            });
-
-            settingsTabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const tabName = tab.dataset.tab;
-                    settingsTabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    settingsContents.forEach(c => c.style.display = 'none');
-                    document.getElementById(`tab-${tabName}`).style.display = 'block';
-                });
-            });
-
-            btnSaveSettings.addEventListener('click', async () => {
-                const newSettings = {
-                    store_name: document.getElementById('setting-store-name').value,
-                    store_address: document.getElementById('setting-store-address').value,
-                    receipt_footer: document.getElementById('setting-receipt-footer').value,
-                    welcome_message: document.getElementById('setting-welcome-message').value,
-                    quick_items_per_row: document.getElementById('setting-quick-items-per-row').value,
-                    quick_items_count: document.getElementById('setting-quick-items-count').value,
-                    quick_items_days: document.getElementById('setting-quick-items-days').value
-                };
-
-                try {
-                    const res = await fetch(`${API_BASE}/settings.php`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ settings: newSettings })
-                    });
-
-                    const data = await res.json();
-                    if (data.success) {
-                        alert('บันทึกการตั้งค่าสำเร็จ');
-                        settingsModal.style.display = 'none';
-                        await loadStoreName();
-                    } else {
-                        alert('เกิดข้อผิดพลาด: ' + data.message);
-                    }
-                } catch (error) {
-                    console.error('Error saving settings:', error);
-                    alert('ไม่สามารถบันทึกการตั้งค่าได้');
-                }
-            });
-        }
-
-        async function loadSettings() {
-            try {
-                const res = await fetch(`${API_BASE}/settings.php`);
-                const data = await res.json();
-                if (data.success && data.data && data.data.settings) {
-                    const s = data.data.settings;
-                    document.getElementById('setting-store-name').value = s.store_name || '';
-                    document.getElementById('setting-store-address').value = s.store_address || '';
-                    document.getElementById('setting-receipt-footer').value = s.receipt_footer || '';
-                    document.getElementById('setting-welcome-message').value = s.welcome_message || '';
-                    document.getElementById('setting-quick-items-per-row').value = s.quick_items_per_row || '6';
-                    document.getElementById('setting-quick-items-count').value = s.quick_items_count || '30';
-                    document.getElementById('setting-quick-items-days').value = s.quick_items_days || '30';
-                }
-            } catch (error) {
-                console.error('Error loading settings:', error);
-            }
-        }
-    </script>
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/products.js"></script>
 </body>
-
 </html>
