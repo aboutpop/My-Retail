@@ -1,4 +1,4 @@
-# 📄 SKILL.md - POS & Stock Retail Manager
+## 📄 ไฟล์ `skill.md` (ฉบับปรับปรุง - ครบถ้วน)
 
 ```markdown
 # 📘 Skill Documentation - POS & Stock Retail Manager
@@ -18,7 +18,8 @@
 - [7. API Architecture](#7-api-architecture)
 - [8. Database Design](#8-database-design)
 - [9. CSS Architecture](#9-css-architecture)
-- [10. Performance Optimization](#10-performance-optimization)
+- [10. JavaScript Architecture](#10-javascript-architecture)
+- [11. Performance Optimization](#11-performance-optimization)
 
 ---
 
@@ -64,8 +65,6 @@ function convertThaiToNumber(text) {
 }
 ```
 
----
-
 ### 1.2 Auto-focus Logic
 
 **Workflow:**
@@ -78,9 +77,9 @@ function convertThaiToNumber(text) {
 ```javascript
 function searchByBarcode(barcode) {
     if (!barcode) return;
-
+    
     const matches = allProducts.filter(p => p.barcode === barcode);
-
+    
     if (matches.length === 1) {
         addProductToCart(matches[0]);
         document.getElementById('barcode-input').value = ''; // เคลียร์ค่า
@@ -103,12 +102,9 @@ function focusBarcode() {
 }
 ```
 
----
-
 ### 1.3 Quick Add Product (เมื่อไม่พบบาร์โค้ด)
 
 **Workflow:**
-```
 1. สแกนบาร์โค้ด → ไม่พบสินค้า
 2. แสดง Modal "ไม่พบสินค้า"
 3. ผู้ใช้กด "เพิ่มสินค้าชิ้นนี้"
@@ -119,7 +115,6 @@ function focusBarcode() {
 8. เพิ่มสินค้าใหม่ลง `allProducts` array
 9. เพิ่มลงตะกร้าทันที
 10. โฟกัสกลับที่ช่องบาร์โค้ด
-```
 
 **โค้ด:**
 ```javascript
@@ -133,10 +128,9 @@ async function saveNewProduct() {
         category_id: document.getElementById('new-product-category').value || null,
         unit: document.getElementById('new-product-unit').value || 'ชิ้น'
     };
-
+    
     try {
         const res = await apiPost(API_CONFIG.ENDPOINTS.PRODUCTS, formData);
-        
         if (res.success) {
             const newProduct = res.data;
             allProducts.push(newProduct); // เพิ่มลง array
@@ -158,7 +152,6 @@ async function saveNewProduct() {
 ### 2.1 Add to Cart Logic
 
 **Workflow:**
-```
 1. ผู้ใช้คลิกสินค้า / สแกนบาร์โค้ด
 2. ตรวจสอบว่ามีสินค้านี้ในตะกร้าแล้วหรือยัง
 3. ถ้ามี → เพิ่ม quantity + 1
@@ -167,7 +160,6 @@ async function saveNewProduct() {
 6. Render ตะกร้าใหม่
 7. อัปเดตสรุปยอด (ยอดรวม, ส่วนลด, ยอดสุทธิ)
 8. โฟกัสกลับที่ช่องบาร์โค้ด
-```
 
 **โค้ด:**
 ```javascript
@@ -187,7 +179,7 @@ function addProductToCart(product) {
             subtotal: parseFloat(product.price)
         });
     }
-
+    
     renderCart();
     updateSummary();
     focusBarcode();
@@ -197,18 +189,15 @@ function updateSummary() {
     const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
     const discount = parseFloat(document.getElementById('discount-input').value) || 0;
     const total = Math.max(0, subtotal - discount);
-
+    
     document.getElementById('summary-subtotal').textContent = formatMoney(subtotal);
     document.getElementById('summary-total').textContent = formatMoney(total);
 }
 ```
 
----
-
 ### 2.2 Checkout Process
 
 **Workflow:**
-```
 1. ผู้ใช้กด "ชำระเงิน"
 2. ตรวจสอบว่ามีสินค้าในตะกร้าหรือไม่
 3. แสดง confirm dialog
@@ -226,7 +215,6 @@ function updateSummary() {
    - รีเซ็ตส่วนลด
    - โหลดสินค้าใหม่ (อัปเดตสต๊อก)
    - โฟกัสกลับที่ช่องบาร์โค้ด
-```
 
 **โค้ด:**
 ```javascript
@@ -235,12 +223,12 @@ async function checkout() {
         showToast('ไม่มีสินค้าในตะกร้า', 'warning');
         return;
     }
-
+    
     if (!confirm('ยืนยันการชำระเงิน?')) return;
-
+    
     try {
         const discount = parseFloat(document.getElementById('discount-input').value) || 0;
-
+        
         const res = await apiPost(API_CONFIG.ENDPOINTS.SALES, {
             items: cart.map(item => ({
                 product_id: item.product_id,
@@ -250,7 +238,7 @@ async function checkout() {
             discount: discount,
             payment_method: paymentMethod
         });
-
+        
         if (res.success) {
             showToast(`ชำระเงินสำเร็จ! เลขบิล: ${res.data.bill_no}`, 'success');
             cart = [];
@@ -293,16 +281,13 @@ CREATE TABLE held_bills (
 - `items` เก็บเป็น JSONB (PostgreSQL)
 - `bill_index` ใช้ระบุตำแหน่ง (1-5)
 
----
-
 ### 3.2 Hold Bill Workflow
 
 **Workflow:**
-```
 1. ผู้ใช้กด "พักบิล"
 2. ตรวจสอบว่ามีสินค้าในตะกร้าหรือไม่
 3. API: POST /api/hold_bills.php
-   Body: { session_id, items, discount, payment_method }
+   - Body: { session_id, items, discount, payment_method }
 4. Backend:
    - ตรวจสอบจำนวนบิลที่พักไว้ (< 5)
    - หา bill_index ว่าง (1-5)
@@ -313,7 +298,6 @@ CREATE TABLE held_bills (
    - โหลด held bills ใหม่
    - แสดง toast "พักบิลสำเร็จ"
    - โฟกัสกลับที่ช่องบาร์โค้ด
-```
 
 **โค้ด:**
 ```javascript
@@ -322,7 +306,7 @@ async function holdBill() {
         showToast('ไม่มีสินค้าในตะกร้า', 'warning');
         return;
     }
-
+    
     try {
         const sessionId = getSessionId();
         const res = await apiPost(API_CONFIG.ENDPOINTS.HELD_BILLS, {
@@ -331,7 +315,7 @@ async function holdBill() {
             discount: parseFloat(document.getElementById('discount-input').value) || 0,
             payment_method: paymentMethod
         });
-
+        
         if (res.success) {
             cart = [];
             document.getElementById('discount-input').value = 0;
@@ -347,12 +331,9 @@ async function holdBill() {
 }
 ```
 
----
-
 ### 3.3 Resume Held Bill Workflow
 
 **Workflow:**
-```
 1. ผู้ใช้คลิก badge ของบิลที่พักไว้
 2. ตรวจสอบว่ามีสินค้าในตะกร้าปัจจุบันหรือไม่
 3. ถ้ามี → แสดง confirm "ต้องการพักบิลปัจจุบันก่อนหรือไม่?"
@@ -363,20 +344,19 @@ async function holdBill() {
    - โหลด held bills ใหม่ (บิลที่โหลดจะหายไป)
    - แสดง toast "โหลดบิลที่พักสำเร็จ"
    - โฟกัสกลับที่ช่องบาร์โค้ด
-```
 
 **โค้ด:**
 ```javascript
 async function resumeHeldBill(billId) {
     const bill = heldBills.find(b => b.id === billId);
     if (!bill) return;
-
+    
     if (cart.length > 0 && currentHeldBillId !== billId) {
         if (!confirm('ต้องการพักบิลปัจจุบันก่อนหรือไม่?')) return;
         await holdBill();
     }
-
-    // ลบบิลออกจาก DB ก่อน
+    
+    // ✅ ลบบิลออกจาก DB ก่อน (ส่งเป็น query string)
     try {
         const sessionId = getSessionId();
         const deleteRes = await apiDeleteWithParams(API_CONFIG.ENDPOINTS.HELD_BILLS, {
@@ -392,8 +372,8 @@ async function resumeHeldBill(billId) {
         showToast('เกิดข้อผิดพลาด', 'error');
         return;
     }
-
-    // โหลดข้อมูลบิลใส่ตะกร้า
+    
+    // ✅ โหลดข้อมูลบิลใส่ตะกร้า
     cart = bill.items;
     currentHeldBillId = bill.id;
     document.getElementById('discount-input').value = bill.discount;
@@ -401,8 +381,8 @@ async function resumeHeldBill(billId) {
     renderCart();
     updateSummary();
     updatePaymentMethodUI();
-
-    // โหลด held bills ใหม่ (บิลที่โหลดจะหายไป)
+    
+    // ✅ โหลด held bills ใหม่ (บิลที่โหลดจะหายไป)
     await loadHeldBills();
     
     showToast('โหลดบิลที่พักสำเร็จ', 'success');
@@ -417,7 +397,6 @@ async function resumeHeldBill(billId) {
 ### 4.1 Stock Cut Logic (เมื่อขายสินค้า)
 
 **Workflow:**
-```
 1. ขายสินค้า (checkout)
 2. ตรวจสอบ no_stock_count ของสินค้า
 3. ถ้า no_stock_count = false:
@@ -426,7 +405,6 @@ async function resumeHeldBill(billId) {
 4. ถ้า no_stock_count = true:
    - ไม่ตัดสต๊อก
    - ไม่บันทึก stock_logs
-```
 
 **โค้ด (sales.php):**
 ```php
@@ -454,12 +432,9 @@ foreach ($saleItems as $item) {
 }
 ```
 
----
-
 ### 4.2 Stock Return Logic (เมื่อ Void บิล)
 
 **Workflow:**
-```
 1. Void บิล (คืนสินค้า)
 2. ดึงข้อมูล sale_items จากบิลเดิม
 3. สำหรับแต่ละรายการ:
@@ -469,7 +444,6 @@ foreach ($saleItems as $item) {
 4. สร้างบิลใหม่ (is_void = true)
    - bill_no = "VOID-YYYYMMDD-XXX"
    - original_bill_no = เลขบิลเดิม
-```
 
 **โค้ด (sales.php):**
 ```php
@@ -495,9 +469,58 @@ foreach ($saleItems as $item) {
 }
 ```
 
----
+### 4.3 Stock In Logic (รับสินค้าเข้า)
 
-### 4.3 No Stock Count Logic
+**Workflow:**
+1. ผู้ใช้สแกนบาร์โค้ดหรือค้นหาสินค้า
+2. เปิด Modal รายละเอียดสินค้า
+3. กรอกจำนวนรับเข้า + หมายเหตุ
+4. กด "เพิ่มเข้ารายการ" → เพิ่มลง `stockInItems` array
+5. กด "บันทึกการรับเข้า"
+6. API: POST /api/stock_in.php (สำหรับแต่ละรายการ)
+7. Backend:
+   - UPDATE products SET stock = stock + quantity
+   - UPDATE products SET cost = new_cost (ถ้าระบุ)
+   - INSERT stock_logs (change_type = 'stock_in', quantity_change = +quantity)
+8. Frontend:
+   - ล้าง `stockInItems` array
+   - โหลดสินค้าใหม่
+   - โหลด stock logs ใหม่
+
+**โค้ด (stock_in.php):**
+```php
+$productId = $data['product_id'];
+$quantity = $data['quantity'];
+$cost = $data['cost'] ?? null;
+$reason = $data['reason'] ?? 'รับเข้าสต๊อก';
+
+// ดึงข้อมูลสินค้าปัจจุบัน
+$product = $pdo->prepare("SELECT * FROM products WHERE id = :id")->execute(['id' => $productId]);
+$currentStock = intval($product['stock']);
+$newStock = $currentStock + $quantity;
+
+// อัปเดตสต๊อก
+$pdo->prepare("UPDATE products SET stock = :stock WHERE id = :id")
+    ->execute(['stock' => $newStock, 'id' => $productId]);
+
+// อัปเดตต้นทุนถ้ามี
+if ($cost !== null) {
+    $pdo->prepare("UPDATE products SET cost = :cost WHERE id = :id")
+        ->execute(['cost' => $cost, 'id' => $productId]);
+}
+
+// บันทึก stock_logs
+$logSql = "INSERT INTO stock_logs (product_id, change_type, quantity_change, reason, current_stock)
+           VALUES (:product_id, 'stock_in', :quantity_change, :reason, :current_stock)";
+$pdo->prepare($logSql)->execute([
+    'product_id' => $productId,
+    'quantity_change' => $quantity,
+    'reason' => $reason,
+    'current_stock' => $newStock
+]);
+```
+
+### 4.4 No Stock Count Logic
 
 **แนวคิด:** สินค้าบางประเภทไม่ต้องนับสต๊อก เช่น:
 - บริการ (ตัดผม, ซ่อมคอมพิวเตอร์)
@@ -552,11 +575,10 @@ function generateBillNo($isVoid = false) {
     $count = intval($stmt->fetch()['count']);
     
     $sequence = str_pad($count + 1, 3, '0', STR_PAD_LEFT);
+    
     return ($isVoid ? "VOID-{$datePrefix}" : "BV-{$datePrefix}") . "-{$sequence}";
 }
 ```
-
----
 
 ### 5.2 Profit Calculation
 
@@ -579,8 +601,6 @@ foreach ($saleItems as $item) {
     $totalProfit += $profit;
 }
 ```
-
----
 
 ### 5.3 Snapshot Data
 
@@ -665,17 +685,13 @@ const monthlyRes = await apiGet(API_CONFIG.ENDPOINTS.SALES, {
 });
 ```
 
----
-
 ### 6.2 Sales Chart (ใช้ Materialized View)
 
 **Workflow:**
-```
 1. ผู้ใช้เลือกช่วงเวลา (7 วัน / 30 วัน / กำหนดเอง)
 2. API: GET /api/reports.php?type=daily_summary&date_from=...&date_to=...
 3. Backend: ดึงข้อมูลจาก daily_sales_summary (Materialized View)
 4. Frontend: วาดกราฟด้วย Chart.js
-```
 
 **โค้ด:**
 ```javascript
@@ -740,6 +756,31 @@ GET    /api/products.php?id=1     → ดึงสินค้าตาม ID
 POST   /api/products.php          → เพิ่มสินค้า
 PUT    /api/products.php          → แก้ไขสินค้า
 DELETE /api/products.php?id=1     → ลบสินค้า
+
+GET    /api/sales.php             → ดึงบิลทั้งหมด
+GET    /api/sales.php?id=1        → ดึงบิลตาม ID
+POST   /api/sales.php             → สร้างบิลขาย
+
+GET    /api/hold_bills.php?session_id=xxx  → ดึงบิลที่พักไว้
+POST   /api/hold_bills.php                 → พักบิลใหม่
+PUT    /api/hold_bills.php?id=1            → แก้ไขบิลที่พัก
+DELETE /api/hold_bills.php?id=1            → ลบบิลที่พัก
+
+GET    /api/categories.php        → ดึงหมวดหมู่ทั้งหมด
+POST   /api/categories.php        → เพิ่มหมวดหมู่
+PUT    /api/categories.php        → แก้ไขหมวดหมู่
+DELETE /api/categories.php?id=1   → ลบหมวดหมู่
+
+GET    /api/settings.php          → ดึงการตั้งค่า
+PUT    /api/settings.php          → แก้ไขการตั้งค่า
+
+GET    /api/reports.php?type=daily_summary    → สรุปยอดขายรายวัน
+GET    /api/reports.php?type=monthly_summary  → สรุปยอดขายรายเดือน
+GET    /api/reports.php?type=category_summary → สรุปตามหมวดหมู่
+GET    /api/reports.php?type=top_products     → สินค้าขายดี
+
+GET    /api/stock_logs.php        → ดึงประวัติการเปลี่ยนแปลงสต๊อก
+POST   /api/stock_in.php          → รับสินค้าเข้าสต๊อก
 ```
 
 **Response Format:**
@@ -759,8 +800,6 @@ DELETE /api/products.php?id=1     → ลบสินค้า
     "message": "Error message"
 }
 ```
-
----
 
 ### 7.2 Caching Strategy
 
@@ -790,11 +829,12 @@ function cache_set($key, $data, $ttl = 300) {
 ```
 
 **Cache Keys:**
-```php
+```
 'products:list:100:0'           → รายการสินค้า (limit 100, offset 0)
 'products:top_selling:30:30'    → สินค้าขายดี 30 อันดับ (30 วัน)
 'sales:summary:all'             → สรุปยอดขายทั้งหมด
 'sales:summary:filtered'        → สรุปยอดขาย (filter ตามวันที่)
+'categories:list'               → รายการหมวดหมู่ทั้งหมด
 ```
 
 ---
@@ -822,7 +862,11 @@ CREATE INDEX idx_sale_items_sale_id ON sale_items(sale_id);
 CREATE INDEX idx_sale_items_product_id ON sale_items(product_id);
 ```
 
----
+**Stock Logs:**
+```sql
+CREATE INDEX idx_stock_logs_product_id ON stock_logs(product_id);
+CREATE INDEX idx_stock_logs_change_type ON stock_logs(change_type);
+```
 
 ### 8.2 Materialized View
 
@@ -881,16 +925,29 @@ EXECUTE FUNCTION update_daily_sales_summary();
 ### 9.1 Type A / Type B System
 
 **Type A: Standard Pages**
-- ไฟล์: `common.css` + `style.css`
-- หน้า: products, categories, sales, stock
-- ใช้ styles มาตรฐานร่วมกัน
+- **ไฟล์:** `common.css` + `style.css`
+- **หน้า:** products, categories, sales, stock
+- **ลักษณะ:** ใช้ styles มาตรฐานร่วมกัน
+
+```html
+<link rel="stylesheet" href="css/common.css">
+<link rel="stylesheet" href="css/style.css">
+```
 
 **Type B: Special Pages**
-- ไฟล์: `common.css` + `pos.css` หรือ `dashboard.css`
-- หน้า: pos, index (dashboard)
-- มี styles เฉพาะที่ซับซ้อน
+- **ไฟล์:** `common.css` + `pos.css` หรือ `dashboard.css`
+- **หน้า:** pos, index (dashboard)
+- **ลักษณะ:** มี styles เฉพาะที่ซับซ้อน
 
----
+```html
+<!-- POS -->
+<link rel="stylesheet" href="css/common.css">
+<link rel="stylesheet" href="css/pos.css">
+
+<!-- Dashboard -->
+<link rel="stylesheet" href="css/common.css">
+<link rel="stylesheet" href="css/dashboard.css">
+```
 
 ### 9.2 CSS Variables
 
@@ -907,6 +964,15 @@ EXECUTE FUNCTION update_daily_sales_summary();
     --warning: #f59e0b;
     --info: #0ea5e9;
     
+    /* Backgrounds */
+    --bg-main: #f1f5f9;
+    --bg-sidebar: #1e293b;
+    --bg-card: #ffffff;
+    
+    /* Text */
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    
     /* Layout */
     --sidebar-width: 260px;
     --topbar-height: 60px;
@@ -914,15 +980,159 @@ EXECUTE FUNCTION update_daily_sales_summary();
 }
 ```
 
+### 9.3 Common Components
+
+**ไฟล์ `common.css` ประกอบด้วย:**
+- CSS Variables
+- Reset & Base
+- Sidebar + Branch Menu
+- Topbar
+- Cards
+- Grid System
+- Stat Cards
+- Buttons (primary, success, danger, warning, outline)
+- Icon Buttons
+- Tables
+- Forms
+- Toolbar
+- Search Results (autocomplete)
+- Tab Group
+- Badges
+- Modals
+- Empty & Loading States
+- Pagination
+- Charts
+- Alerts
+- Utilities
+
 ---
 
-## 10. ⚡ Performance Optimization
+## 10. 📜 JavaScript Architecture
 
-### 10.1 Query Optimization
+### 10.1 File Structure
+
+```
+js/
+├── config.js       # API Configuration (BASE_URL, ENDPOINTS)
+├── utils.js        # Utility Functions (API calls, formatters)
+├── dashboard.js    # Dashboard Logic
+├── pos.js          # POS Logic (Cart, Held Bills, Barcode)
+├── products.js     # Products Management
+├── sales.js        # Sales Management
+├── categories.js   # Categories Management
+└── stock.js        # Stock Management
+```
+
+### 10.2 config.js - API Configuration
+
+```javascript
+const API_CONFIG = {
+    BASE_URL: 'https://my-retail-production.up.railway.app/api',
+    
+    ENDPOINTS: {
+        PRODUCTS: '/products.php',
+        SALES: '/sales.php',
+        CATEGORIES: '/categories.php',
+        HELD_BILLS: '/hold_bills.php',
+        SETTINGS: '/settings.php',
+        REPORTS: '/reports.php',
+        STOCK_LOGS: '/stock_logs.php',
+        STOCK_IN: '/stock_in.php'
+    },
+    
+    DEFAULTS: {
+        ITEMS_PER_PAGE: 50,
+        QUICK_ITEMS_PER_ROW: 6,
+        TOP_PRODUCTS_COUNT: 5,
+        LOOKBACK_DAYS: 30,
+        LOW_STOCK_THRESHOLD: 10
+    },
+    
+    HEADERS: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+};
+```
+
+### 10.3 utils.js - Utility Functions
+
+**API Helpers:**
+```javascript
+apiGet(endpoint, params)              // GET request
+apiPost(endpoint, body)               // POST request
+apiPut(endpoint, body)                // PUT request
+apiDelete(endpoint, body)             // DELETE request (body)
+apiDeleteWithParams(endpoint, params) // DELETE request (query params)
+```
+
+**Format Functions:**
+```javascript
+formatMoney(amount, decimals)     // Format ตัวเงิน (฿1,234.56)
+formatDate(date, options)         // Format วันที่ (15 ม.ค. 2567)
+formatDateFull(date)              // Format วันที่แบบเต็ม
+formatDateForInput(date)          // Format สำหรับ input date (YYYY-MM-DD)
+getToday()                        // วันที่วันนี้
+getYesterday()                    // วันที่เมื่อวาน
+```
+
+**UI Helpers:**
+```javascript
+showToast(message, type, duration)  // แสดง Toast notification
+showLoading(element, message)       // แสดง Loading state
+showEmptyState(element, message)    // แสดง Empty state
+showErrorState(element, message)    // แสดง Error state
+openModal(modalId)                  // เปิด Modal
+closeModal(modalId)                 // ปิด Modal
+confirmAction(message)              // ยืนยันการกระทำ
+```
+
+**Validation Functions:**
+```javascript
+isEmpty(value)              // ตรวจสอบค่าว่าง
+isValidEmail(email)         // ตรวจสอบ email format
+isValidPhone(phone)         // ตรวจสอบเบอร์โทร format
+isValidAmount(value)        // ตรวจสอบจำนวนเงิน
+```
+
+**Storage Functions:**
+```javascript
+saveToStorage(key, value)   // บันทึกลง localStorage
+getFromStorage(key)         // ดึงข้อมูลจาก localStorage
+removeFromStorage(key)      // ลบข้อมูลจาก localStorage
+clearStorage()              // ล้างข้อมูลทั้งหมด
+```
+
+**Utility Functions:**
+```javascript
+debounce(func, wait)        // Debounce function
+escapeHtml(text)            // Escape HTML special characters
+truncateText(text, max)     // ตัดข้อความที่ยาว
+copyToClipboard(text)       // Copy ข้อความ
+scrollToElement(element)    // Scroll ไปยัง element
+```
+
+### 10.4 Page-specific Files
+
+แต่ละหน้ามี logic ของตัวเอง:
+
+- **dashboard.js** - โหลด stats, วาดกราฟ, จัดการ settings
+- **pos.js** - จัดการตะกร้า, พักบิล, สแกนบาร์โค้ด, ค้นหาสินค้า
+- **products.js** - CRUD สินค้า, ค้นหา, กรอง, เรียงลำดับ
+- **sales.js** - ดูรายการบิล, กรองตามวันที่, Void บิล
+- **categories.js** - CRUD หมวดหมู่, เลื่อนลำดับ
+- **stock.js** - รับสินค้าเข้า, ดูประวัติ, คำนวณต้นทุน
+
+---
+
+## 11. ⚡ Performance Optimization
+
+### 11.1 Query Optimization
 
 **Problem:** ดึงข้อมูลสินค้าพร้อม category_name ต้อง JOIN ทุกครั้ง
 
 **Solution:** ดึง categories จาก cache แล้ว map ใน PHP
+
 ```php
 // ดึงสินค้า (ไม่ JOIN categories)
 $sql = "SELECT * FROM products ...";
@@ -941,13 +1151,12 @@ foreach ($products as &$product) {
 }
 ```
 
----
-
-### 10.2 Summary Caching
+### 11.2 Summary Caching
 
 **Problem:** คำนวณ SUM() ทุกครั้งที่โหลดหน้า
 
 **Solution:** Cache ผลลัพธ์ 60 วินาที
+
 ```php
 $summaryCacheKey = 'sales:summary:all';
 $summary = cache_get($summaryCacheKey);
@@ -959,11 +1168,8 @@ if ($summary === false) {
 }
 ```
 
----
+### 11.3 Clear Cache on Update
 
-### 10.3 Clear Cache on Update
-
-**Logic:**
 ```php
 // หลังสร้างบิลใหม่
 cache_delete('sales:summary:all');
@@ -972,6 +1178,30 @@ cache_delete('sales:summary:filtered');
 // หลังเพิ่ม/แก้ไข/ลบสินค้า
 cache_delete('products:list:100:0');
 cache_delete('products:top_selling:30:30');
+
+// หลังแก้ไขหมวดหมู่
+cache_delete('categories:list');
+```
+
+### 11.4 Database Indexes
+
+```sql
+-- Products
+CREATE INDEX idx_products_barcode ON products(barcode);
+CREATE INDEX idx_products_category_id ON products(category_id);
+CREATE INDEX idx_products_stock ON products(stock);
+
+-- Sales
+CREATE INDEX idx_sales_bill_no ON sales(bill_no);
+CREATE INDEX idx_sales_sale_date ON sales(sale_date);
+
+-- Sale Items
+CREATE INDEX idx_sale_items_sale_id ON sale_items(sale_id);
+CREATE INDEX idx_sale_items_product_id ON sale_items(product_id);
+
+-- Stock Logs
+CREATE INDEX idx_stock_logs_product_id ON stock_logs(product_id);
+CREATE INDEX idx_stock_logs_change_type ON stock_logs(change_type);
 ```
 
 ---
@@ -983,15 +1213,16 @@ cache_delete('products:top_selling:30:30');
 **ฟีเจอร์หลัก:**
 - ✅ Smart Barcode Scanner (Thai to Number)
 - ✅ Hold Bills System (JSONB)
-- ✅ Stock Management (no_stock_count)
+- ✅ Stock Management (no_stock_count, stock_in)
 - ✅ Materialized View (daily_sales_summary)
 - ✅ File-based Cache
 - ✅ CSS Architecture (Type A / Type B)
+- ✅ JavaScript Architecture (Modular)
 
 **พัฒนาโดย:** About Pop  
 **อัปเดตล่าสุด:** 2026-07-09
-```
 
 ---
+```
 
-บันทึกไฟล์ `skill.md` นี้ได้เลยครับ! ตอนนี้โปรเจกต์ของคุณมีเอกสารประกอบที่ครบถ้วนทั้ง `readme.md` และ `skill.md` แล้ว 🚀
+บันทึกไฟล์ `skill.md` นี้ได้เลยครับ! เอกสารนี้ครอบคลุมทุก workflow และ logic ของระบบ รวมถึงส่วนที่เพิ่มเข้ามาใหม่ เช่น Stock In, Stock Logs, JavaScript Architecture 🚀
